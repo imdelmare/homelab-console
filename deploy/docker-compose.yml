@@ -1,0 +1,224 @@
+# Homelab Console — fallback Compose deployment.
+#
+# Run from the repository root:
+#   docker compose -f deploy/docker-compose.yml --env-file .env up -d --build
+#
+# This is intentionally simple: three services, no orchestration platform.
+# See docs/DEPLOYMENT.md for the live topology and what must
+# never be exposed publicly.
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-live}
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://console:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/console}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-5}
+      DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-10}
+      DATABASE_POOL_TIMEOUT_SECONDS: ${DATABASE_POOL_TIMEOUT_SECONDS:-30}
+      DATABASE_POOL_RECYCLE_SECONDS: ${DATABASE_POOL_RECYCLE_SECONDS:-1800}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES:-720}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      TRUSTED_PROXY_ENABLED: ${TRUSTED_PROXY_ENABLED:-true}
+      ALLOW_INSECURE_LOCAL_TLS: ${ALLOW_INSECURE_LOCAL_TLS:-false}
+      AUTH_NOTIFICATION_ADAPTER: ${AUTH_NOTIFICATION_ADAPTER:-telegram}
+      AUTH_LOGIN_MODE: ${AUTH_LOGIN_MODE:-password}
+      AUTH_RECOVERY_ENABLED: ${AUTH_RECOVERY_ENABLED:-true}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_ALLOWED_USER_ID: ${TELEGRAM_ALLOWED_USER_ID}
+      TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
+      NOTIFICATION_OUTBOX_ENABLED: ${NOTIFICATION_OUTBOX_ENABLED:-true}
+      NOTIFICATION_WORKER_INTERVAL_SECONDS: ${NOTIFICATION_WORKER_INTERVAL_SECONDS:-2}
+      NOTIFICATION_WARNING_DEBOUNCE_SECONDS: ${NOTIFICATION_WARNING_DEBOUNCE_SECONDS:-900}
+      NOTIFICATION_COOLDOWN_SECONDS: ${NOTIFICATION_COOLDOWN_SECONDS:-7200}
+      NOTIFICATION_CRITICAL_DEBOUNCE_SECONDS: ${NOTIFICATION_CRITICAL_DEBOUNCE_SECONDS:-120}
+      NOTIFICATION_CRITICAL_COOLDOWN_SECONDS: ${NOTIFICATION_CRITICAL_COOLDOWN_SECONDS:-1800}
+      NOTIFICATION_AGGREGATION_WINDOW_SECONDS: ${NOTIFICATION_AGGREGATION_WINDOW_SECONDS:-120}
+      NOTIFICATION_MAX_ATTEMPTS: ${NOTIFICATION_MAX_ATTEMPTS:-5}
+      OPERATIONAL_RETENTION_ENABLED: ${OPERATIONAL_RETENTION_ENABLED:-true}
+      RETENTION_INTERVAL_SECONDS: ${RETENTION_INTERVAL_SECONDS:-3600}
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-180}
+      TOOL_INVOCATION_RETENTION_DAYS: ${TOOL_INVOCATION_RETENTION_DAYS:-90}
+      WATCHER_RUN_RETENTION_DAYS: ${WATCHER_RUN_RETENTION_DAYS:-90}
+      NOTIFICATION_OUTBOX_RETENTION_DAYS: ${NOTIFICATION_OUTBOX_RETENTION_DAYS:-90}
+      RETENTION_BATCH_SIZE: ${RETENTION_BATCH_SIZE:-1000}
+      HOMELAB_CONFIG_PATH: /app/config/homelab.local.yml
+      SECRETS_PATH: /app/config/secrets.local.yml
+      AUDIT_JSONL_ENABLED: ${AUDIT_JSONL_ENABLED:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      CONVERSATION_PROVIDER: ${CONVERSATION_PROVIDER:-ollama}
+      CONVERSATION_MODEL: ${CONVERSATION_MODEL:-gpt-5.6-luna}
+      OPENCODE_GO_API_KEY: ${OPENCODE_GO_API_KEY:-}
+      OPENCODE_GO_CHAT_MODEL: ${OPENCODE_GO_CHAT_MODEL:-deepseek-v4-flash}
+      OPENCODE_GO_ROUTER_MODEL: ${OPENCODE_GO_ROUTER_MODEL:-deepseek-v4-pro}
+      OPENCODE_GO_MAX_ATTEMPTS: ${OPENCODE_GO_MAX_ATTEMPTS:-3}
+      AI_MANAGER_HOST_ID: ${AI_MANAGER_HOST_ID:-ai-host}
+      AI_MANAGER_PORT: ${AI_MANAGER_PORT:-8080}
+      AI_MANAGER_MODEL: ${AI_MANAGER_MODEL:-Qwen3.5-4B-Q8_0}
+      AI_MANAGER_CONNECT_TIMEOUT_SECONDS: ${AI_MANAGER_CONNECT_TIMEOUT_SECONDS:-2}
+      AI_MANAGER_TIMEOUT_SECONDS: ${AI_MANAGER_TIMEOUT_SECONDS:-60}
+      AI_MANAGER_FAILURE_COOLDOWN_SECONDS: ${AI_MANAGER_FAILURE_COOLDOWN_SECONDS:-90}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://127.0.0.1:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma4-e4b-agentic:latest}
+      OLLAMA_CONNECT_TIMEOUT_SECONDS: ${OLLAMA_CONNECT_TIMEOUT_SECONDS:-2}
+      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-90}
+      OLLAMA_FAILURE_COOLDOWN_SECONDS: ${OLLAMA_FAILURE_COOLDOWN_SECONDS:-90}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-10m}
+      TELEGRAM_MEDIA_ENABLED: ${TELEGRAM_MEDIA_ENABLED:-true}
+      TELEGRAM_MEDIA_MAX_IMAGE_BYTES: ${TELEGRAM_MEDIA_MAX_IMAGE_BYTES:-8000000}
+      TELEGRAM_MEDIA_MAX_AUDIO_BYTES: ${TELEGRAM_MEDIA_MAX_AUDIO_BYTES:-10000000}
+      TELEGRAM_MEDIA_MAX_AUDIO_SECONDS: ${TELEGRAM_MEDIA_MAX_AUDIO_SECONDS:-120}
+      CONVERSATION_REASONING_EFFORT: ${CONVERSATION_REASONING_EFFORT:-low}
+      CONVERSATION_MAX_TURNS: ${CONVERSATION_MAX_TURNS:-4}
+      CONVERSATION_MAX_TOOL_CALLS: ${CONVERSATION_MAX_TOOL_CALLS:-3}
+      CONVERSATION_MAX_OUTPUT_TOKENS: ${CONVERSATION_MAX_OUTPUT_TOKENS:-600}
+      CONVERSATION_TIMEOUT_SECONDS: ${CONVERSATION_TIMEOUT_SECONDS:-60}
+      TASK_ROUTER_ENABLED: ${TASK_ROUTER_ENABLED:-false}
+      TASK_ROUTER_PROVIDER: ${TASK_ROUTER_PROVIDER:-}
+      TASK_ROUTER_MODEL: ${TASK_ROUTER_MODEL:-}
+      TASK_ROUTER_REASONING_EFFORT: ${TASK_ROUTER_REASONING_EFFORT:-low}
+      TASK_ROUTER_MAX_OUTPUT_TOKENS: ${TASK_ROUTER_MAX_OUTPUT_TOKENS:-500}
+      TASK_ROUTER_TIMEOUT_SECONDS: ${TASK_ROUTER_TIMEOUT_SECONDS:-30}
+      TASK_ROUTER_WORKER_INTERVAL_SECONDS: ${TASK_ROUTER_WORKER_INTERVAL_SECONDS:-1}
+      TASK_ROUTER_JOB_LEASE_SECONDS: ${TASK_ROUTER_JOB_LEASE_SECONDS:-300}
+      TASK_ROUTER_MAX_ATTEMPTS: ${TASK_ROUTER_MAX_ATTEMPTS:-3}
+      INCIDENT_MATCHER_ENABLED: ${INCIDENT_MATCHER_ENABLED:-true}
+      INCIDENT_MATCHER_MAX_CANDIDATES: ${INCIDENT_MATCHER_MAX_CANDIDATES:-5}
+      INCIDENT_MATCHER_MAX_CALLS_PER_HOUR: ${INCIDENT_MATCHER_MAX_CALLS_PER_HOUR:-10}
+      INCIDENT_MATCHER_AUTO_HANDLE_CONFIDENCE: ${INCIDENT_MATCHER_AUTO_HANDLE_CONFIDENCE:-0.9}
+      WATCHERS_ENABLED: ${WATCHERS_ENABLED:-true}
+      WATCHERS_INTERVAL_SECONDS: ${WATCHERS_INTERVAL_SECONDS:-600}
+      WATCHERS_MIN_SEVERITY: ${WATCHERS_MIN_SEVERITY:-warning}
+      WATCHERS_IGNORE_PATTERNS: ${WATCHERS_IGNORE_PATTERNS:-}
+      WATCHERS_RESOLVE_AFTER_MISSING_RUNS: ${WATCHERS_RESOLVE_AFTER_MISSING_RUNS:-3}
+      FIXER_DISPATCH_ENABLED: ${FIXER_DISPATCH_ENABLED:-false}
+      FIXER_DISPATCH_URL: ${FIXER_DISPATCH_URL:-http://127.0.0.1:8767/fixer}
+      FIXER_DISPATCH_SECRET: ${FIXER_DISPATCH_SECRET:-}
+      FIXER_DISPATCH_TIMEOUT_SECONDS: ${FIXER_DISPATCH_TIMEOUT_SECONDS:-5}
+    volumes:
+      # Provider secrets and inventory are host-mounted config, not baked
+      # into the image (see docs/SECURITY.md on secret handling).
+      - ../config:/app/config:ro
+      - api-data:/app/data
+    # No published ports: only reachable from other services on this
+    # compose network (the `web` service's Nginx proxies to it).
+    expose:
+      - "8000"
+    healthcheck:
+      # The slim base image has no curl/wget; use the stdlib instead.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mcp-http:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.mcp
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-live}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://console:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/console}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      HOMELAB_CONFIG_PATH: /app/apps/api/config/homelab.local.yml
+      SECRETS_PATH: /app/apps/api/config/secrets.local.yml
+      MCP_TRANSPORT: streamable-http
+      MCP_HTTP_HOST: 0.0.0.0
+      MCP_HTTP_PORT: 8765
+      MCP_HTTP_PATH: ${MCP_HTTP_PATH:-/mcp/}
+      MCP_HTTP_ALLOWED_HOSTS: ${MCP_HTTP_ALLOWED_HOSTS:-127.0.0.1:8765,localhost:8765}
+      MCP_HTTP_ALLOWED_ORIGINS: ${MCP_HTTP_ALLOWED_ORIGINS:-}
+    volumes:
+      - ../config:/app/apps/api/config:ro
+    ports:
+      # Trusted LAN MCP endpoint. Clients still need a per-client bearer token.
+      - "8765:8765"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      api:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-console}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-console}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Local-only: never bind Postgres to a public interface. This binds
+    # only to loopback on the host, for operator debugging/backup access.
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-console}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  sentinel:
+    profiles: ["sentinel"]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.sentinel
+    restart: unless-stopped
+    environment:
+      SENTINEL_CONFIG_PATH: ${SENTINEL_CONFIG_PATH:-/app/config/sentinel.local.json}
+      SENTINEL_STATE_PATH: ${SENTINEL_STATE_PATH:-/app/data/sentinel.sqlite3}
+      SENTINEL_HEARTBEAT_TOKEN: ${SENTINEL_HEARTBEAT_TOKEN:-}
+      SENTINEL_LISTEN_HOST: ${SENTINEL_LISTEN_HOST:-0.0.0.0}
+      SENTINEL_LISTEN_PORT: ${SENTINEL_LISTEN_PORT:-8766}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID}
+    volumes:
+      - ../config:/app/config:ro
+      - sentinel-data:/app/data
+    # Keep this unpublished by default. If a remote heartbeat must cross the
+    # public internet, publish it only through a reverse proxy you control.
+    expose:
+      - "8766"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8766/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  api-data:
+  postgres-data:
+  sentinel-data:

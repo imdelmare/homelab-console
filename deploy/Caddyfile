@@ -1,0 +1,42 @@
+# Homelab Console — reverse proxy / static frontend
+#
+# Replace `console.example.com` with your real public domain before
+# deploying. Caddy handles certificate acquisition/renewal automatically for
+# a real, DNS-resolvable domain.
+
+console.example.com {
+	# Security headers.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Caddy sets Server itself; explicitly drop anything more revealing.
+		-Server
+	}
+
+	# API and health check are reverse-proxied to the FastAPI app.
+	# `api` is the docker-compose service name; adjust if deploying without
+	# compose (e.g. to 127.0.0.1:8000 if running the API directly on the host).
+	handle /health {
+		reverse_proxy api:8000
+	}
+
+	handle /ready {
+		reverse_proxy api:8000
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	# Everything else: the built React frontend, served as static files with
+	# SPA fallback to index.html for client-side routing.
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	encode zstd gzip
+}

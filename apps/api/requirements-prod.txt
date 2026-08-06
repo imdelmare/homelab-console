@@ -1,0 +1,2 @@
+# Production install is the same PostgreSQL-only dependency set.
+-r requirements.txt

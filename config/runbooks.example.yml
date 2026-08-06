@@ -1,0 +1,85 @@
+# Authored runbooks for task_context.py's runbook engine (roadmap Phase 3).
+#
+# Each entry matches one of task_context.py's _incident_type values and
+# gives an ordered procedure instead of a flat tool bag: task_context walks
+# `steps` in order, skipping any tool already called for the task, and
+# recommends the first one not yet attempted. Once every step has been
+# tried, `escalation_note` is surfaced instead of more tool recommendations.
+#
+# Editable without a redeploy: edit this file (or your local override) and
+# restart the API process — same as every other config in config/.
+#
+# Only the incident types judged most valuable given Phase 1's dependency
+# graph (opnsense/wireguard/pbs/adguard are its actual hubs) have a runbook
+# today. Any other incident type keeps task_context.py's flat
+# PROVIDER_TOOL_ALLOWLIST/KEYWORD_TOOL_ALLOWLIST fallback — add a runbook
+# here once real usage shows a type is worth authoring one for.
+runbooks:
+  - incident_type: gateway_alert
+    label: "OPNsense gateway alert"
+    steps:
+      - tool_id: opnsense.summary
+        evidence: "Confirm current WAN/gateway status and any active alerts."
+      - tool_id: opnsense.gateways.status
+        evidence: "Check individual gateway health/latency to isolate which link is down."
+      - tool_id: opnsense.interfaces.statistics
+        evidence: "Check interface error/drop counters for a link-layer cause."
+    escalation_note: >-
+      None of the above isolated the cause — ask the operator before
+      any further action.
+
+  - incident_type: connectivity_alert
+    label: "WireGuard tunnel / connectivity alert"
+    steps:
+      - tool_id: opnsense.wireguard.status
+        evidence: "Check the OPNsense side of the tunnel: peer handshake age and interface state."
+      - tool_id: vps.wireguard.status
+        evidence: "Check the VPS side of the same tunnel for a one-sided vs. two-sided failure."
+      - tool_id: vps.summary
+        evidence: "Rule out a VPS-side resource/reachability problem unrelated to the tunnel itself."
+    escalation_note: >-
+      Tunnel and VPS both checked without a clear cause — ask the operator
+      before any further action.
+
+  - incident_type: backup_alert
+    label: "Proxmox Backup Server alert"
+    steps:
+      - tool_id: pbs.summary
+        evidence: "Confirm current datastore/backup-job health at a glance."
+      - tool_id: pbs.datastores.status
+        evidence: "Check datastore capacity/usage for a full-disk cause."
+      - tool_id: pbs.tasks.recent
+        evidence: "Check recent PBS task outcomes for a specific failed job."
+      - tool_id: pbs.verify.jobs.health
+        evidence: "Check verify-job health for silent backup corruption."
+    escalation_note: >-
+      Datastores, recent tasks and verify jobs all checked without a clear
+      cause — ask the operator before any further action.
+
+  - incident_type: dns_alert
+    label: "AdGuard DNS alert"
+    steps:
+      - tool_id: adguard.summary
+        evidence: "Confirm current DNS protection/query status at a glance."
+      - tool_id: adguard.status
+        evidence: "Check AdGuard's own protection state (e.g. accidentally disabled)."
+      - tool_id: adguard.stats
+        evidence: "Check query/blocking statistics for an abnormal spike or drop."
+      - tool_id: lab.dns.summary
+        evidence: "Cross-check DNS resolution from the lab's own perspective, not just AdGuard's."
+    escalation_note: >-
+      AdGuard state and DNS resolution both checked without a clear cause —
+      ask the operator before any further action.
+
+  - incident_type: power_alert
+    label: "UPS / power alert"
+    steps:
+      - tool_id: nutups.summary
+        evidence: "Confirm UPS line-power, battery and runtime status at a glance."
+      - tool_id: nutups.status
+        evidence: "Read normalized NUT UPS variables for battery charge, runtime and load."
+      - tool_id: nutups.devices.list
+        evidence: "Confirm which UPS devices are exposed by the configured NUT upsd endpoint."
+    escalation_note: >-
+      UPS state was checked without a clear cause — ask the operator before
+      any further action.

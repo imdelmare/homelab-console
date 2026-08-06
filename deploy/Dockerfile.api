@@ -1,0 +1,38 @@
+# Homelab Console API — fallback deployment image
+#
+# Build context must be the repository root, e.g.:
+#   docker build -f deploy/Dockerfile.api -t homelab-console-api .
+
+FROM python:3.12-slim AS base
+
+# Keep Python from writing .pyc files / buffering stdout, and avoid pip
+# caching layers we don't need in the final image.
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Install dependencies first so this layer is cached across code-only changes.
+# requirements-prod.txt pulls in the PostgreSQL-only API dependency set.
+COPY apps/api/requirements.txt apps/api/requirements-prod.txt ./
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Application code and migrations.
+COPY apps/api/app ./app
+COPY apps/api/alembic.ini ./alembic.ini
+COPY apps/api/migrations ./migrations
+
+# Non-root user — the API never needs root inside the container.
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin console \
+    && mkdir -p /app/data \
+    && chown -R console:console /app
+USER console
+
+EXPOSE 8000
+
+# Apply migrations, then hand off to uvicorn via `exec` so it still becomes
+# PID 1 and receives SIGTERM directly for graceful shutdown (see
+# docs/DEPLOYMENT.md#graceful-shutdown) — `sh -c` itself is not PID 1 once
+# `exec` replaces it.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

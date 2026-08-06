@@ -1,0 +1,6 @@
+# Test dependencies include the MCP SDK because the backend suite exercises
+# the adapter contract in apps/mcp/server.py.
+-r requirements.txt
+-r ../mcp/requirements.txt
+pytest>=8.3
+pytest-asyncio>=1.0

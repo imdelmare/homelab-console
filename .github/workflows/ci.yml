@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: console
+          POSTGRES_PASSWORD: console
+          POSTGRES_DB: console
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U console"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://console:console@localhost:5432/postgres
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest
+      - run: python -m pytest ../sentinel/tests
+
+  postgres-migrations:
+    # Independently verify the production migration path and async driver.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: console
+          POSTGRES_PASSWORD: console
+          POSTGRES_DB: console
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U console"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      DATABASE_URL: postgresql+psycopg://console:console@localhost:5432/console
+      APP_ENV: test
+      SESSION_SECRET: ci-only-not-a-real-secret-0123456789
+      MCP_SERVICE_TOKEN: ci-only-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-prod.txt
+      - run: alembic upgrade head
+      - run: |
+          python -c "
+          import asyncio
+          from app.db.session import get_engine
+          from sqlalchemy import text
+          from alembic.config import Config
+          from alembic.script import ScriptDirectory
+
+          async def main():
+              expected_heads = set(ScriptDirectory.from_config(Config('alembic.ini')).get_heads())
+              engine = get_engine()
+              async with engine.connect() as conn:
+                  result = await conn.execute(text('select version_num from alembic_version'))
+                  current_heads = set(result.scalars().all())
+                  assert current_heads == expected_heads, (current_heads, expected_heads)
+              await engine.dispose()
+
+          asyncio.run(main())
+          "
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test -- --run
+      - run: npm run lint
+
+  speedtest-probe:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/speedtest_probe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s . -p 'test_*.py'
+      - run: python -m py_compile server.py
+
+  configuration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install PyYAML==6.0.2
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          for path in [
+              Path("config/homelab.example.yml"),
+              Path("config/secrets.local.example.yml"),
+              Path("config/runbooks.example.yml"),
+          ]:
+              with path.open(encoding="utf-8") as handle:
+                  assert yaml.safe_load(handle) is not None, path
+          print("configuration YAML validated")
+          PY
+      - run: git diff --check
