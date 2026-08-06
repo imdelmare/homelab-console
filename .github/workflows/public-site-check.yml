@@ -6,7 +6,9 @@ on:
       - ".github/workflows/public-site-check.yml"
       - "public-site/**"
   push:
-    branches: [main]
+    branches:
+      - main
+      - automation/public-site
     paths:
       - ".github/workflows/public-site-check.yml"
       - "public-site/**"
@@ -57,3 +59,40 @@ jobs:
                       raise SystemExit(f"{path} contains a blocked {category}")
 
           print("Public site artifact validation passed.")
+
+  upsert-pull-request:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/automation/public-site'
+    needs: validate
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Create or update publication pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_number="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head automation/public-site \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+          pr_body="Automated sanitized documentation update. Only \`public-site/\` is managed by the publication pipeline; merge remains an explicit operator decision."
+
+          if [[ -n "$pr_number" ]]; then
+            gh pr edit "$pr_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "docs: sync sanitized public site" \
+              --body "$pr_body"
+          else
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head automation/public-site \
+              --title "docs: sync sanitized public site" \
+              --body "$pr_body"
+          fi
