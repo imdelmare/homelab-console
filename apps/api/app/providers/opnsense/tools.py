@@ -369,7 +369,7 @@ async def gateway_transition(action: str) -> dict:
 
 
 async def egress_switch(profile: str) -> dict:
-    """Switch the default egress between direct primary ISP and WG_DE."""
+    """Switch the default egress between direct primary_isp and WG_DE."""
     if profile not in {"direct", "vpn_de"}:
         raise ProviderError("invalid_input", "unsupported egress profile")
     config = provider_config("opnsense").get("egress_switch") or {}

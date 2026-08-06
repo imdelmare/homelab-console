@@ -167,8 +167,8 @@ def test_configured_opnsense_gateways_become_independent_observations(monkeypatc
         lambda provider_id: {
             "gateway_observations": [
                 {
-                    "id": "primary ISP",
-                    "label": "primary ISP FWA",
+                    "id": "primary_isp",
+                    "label": "primary_isp FWA",
                     "gateway_name": "FASTWEB_DHCP",
                 },
                 {
@@ -200,7 +200,7 @@ def test_configured_opnsense_gateways_become_independent_observations(monkeypatc
     )
 
     primary = evaluate_observation(
-        definitions["opnsense.gateway.primary ISP"], execution
+        definitions["opnsense.gateway.primary_isp"], execution
     )
     backup = evaluate_observation(
         definitions["opnsense.gateway.backup"], execution
@@ -266,8 +266,8 @@ async def test_observations_endpoint_routes_every_probe_through_execution_core(
         lambda provider_id: {
             "gateway_observations": [
                 {
-                    "id": "primary ISP",
-                    "label": "primary ISP FWA",
+                    "id": "primary_isp",
+                    "label": "primary_isp FWA",
                     "gateway_name": "WAN",
                 },
                 {
@@ -333,7 +333,7 @@ async def test_observations_endpoint_routes_every_probe_through_execution_core(
     assert {item["id"] for item in response.json()} == {
         "cloudflaretunnel.tunnel",
         "opnsense.gateways",
-        "opnsense.gateway.primary ISP",
+        "opnsense.gateway.primary_isp",
         "opnsense.gateway.backup",
         "opnsense.wireguard",
         "proxmox.cluster",

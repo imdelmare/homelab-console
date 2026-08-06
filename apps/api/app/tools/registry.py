@@ -1065,7 +1065,7 @@ _TOOLS: list[ToolDefinition] = [
         id="opnsense.egress.switch",
         name="OPNsense Egress Switch",
         description=(
-            "Switch the default egress between the declared direct primary ISP "
+            "Switch the default egress between the declared direct primary_isp "
             "path and the declared German WireGuard gateway."
         ),
         provider_id="opnsense",

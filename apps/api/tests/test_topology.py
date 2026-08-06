@@ -12,11 +12,11 @@ from tests.conftest import do_login
 def _declared(monkeypatch):
     nodes = [
         TopologyNodeEntry(
-            id="wan.primary ISP",
-            label="primary ISP FWA",
+            id="wan.primary_isp",
+            label="primary_isp FWA",
             kind="uplink",
             layer="wan",
-            observation_id="opnsense.gateway.primary ISP",
+            observation_id="opnsense.gateway.primary_isp",
             inherit_provider_status=False,
         ),
         TopologyNodeEntry(
@@ -66,7 +66,7 @@ def _declared(monkeypatch):
         ),
     ]
     edges = [
-        TopologyEdgeEntry(source="wan.primary ISP", target="edge.opnsense", kind="uplink", availability_group="home_wan"),
+        TopologyEdgeEntry(source="wan.primary_isp", target="edge.opnsense", kind="uplink", availability_group="home_wan"),
         TopologyEdgeEntry(source="wan.mikrotik", target="edge.opnsense", kind="uplink", availability_group="home_wan"),
         TopologyEdgeEntry(source="access.wifi", target="access.fritz", kind="member", affects_rca=False),
         TopologyEdgeEntry(source="compute.proxmox", target="service.adguard", kind="hosts"),
@@ -83,10 +83,10 @@ def test_declared_topology_keeps_backup_semantics_and_fritz_off_wan(monkeypatch)
 
     assert graph.layer_order == ["wan", "edge", "compute", "services"]
     assert graph.availability_groups[0].mode == "any"
-    assert {node.id for node in graph.nodes if node.layer == "wan"} == {"wan.primary ISP", "wan.mikrotik"}
-    primary ISP = next(node for node in graph.nodes if node.id == "wan.primary ISP")
-    assert primary ISP.observation_id == "opnsense.gateway.primary ISP"
-    assert primary ISP.inherit_provider_status is False
+    assert {node.id for node in graph.nodes if node.layer == "wan"} == {"wan.primary_isp", "wan.mikrotik"}
+    primary_isp = next(node for node in graph.nodes if node.id == "wan.primary_isp")
+    assert primary_isp.observation_id == "opnsense.gateway.primary_isp"
+    assert primary_isp.inherit_provider_status is False
     mikrotik = next(node for node in graph.nodes if node.id == "wan.mikrotik")
     assert mikrotik.observation_id == "opnsense.gateway.backup"
     assert mikrotik.inherit_provider_status is False

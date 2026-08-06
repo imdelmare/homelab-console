@@ -88,7 +88,7 @@ describe("topology node attribution", () => {
 
   it("labels structural network nodes as paths instead of unknown", () => {
     const structural = node({
-      id: "wan.primary ISP",
+      id: "wan.primary_isp",
       kind: "network",
       provider_id: "",
       observation_id: "",
@@ -177,7 +177,7 @@ describe("topology node attribution", () => {
       payload: { observation_id: "opnsense.gateway.primary" },
     };
     const gateway = node({
-      id: "wan.primary ISP",
+      id: "wan.primary_isp",
       kind: "network",
       provider_id: "",
       observation_id: "opnsense.gateway.primary",
