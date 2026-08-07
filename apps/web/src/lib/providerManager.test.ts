@@ -65,7 +65,7 @@ describe("provider manager helpers", () => {
       {
         id: "homeassistant",
         name: "",
-        baseUrl: "https://user:password@example.test",
+        baseUrl: "https://example:example@example.test",
         verifyTls: true,
         timeoutSeconds: 60,
       },

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     app_env: Literal["live", "test"] = "live"
     app_host: str = "127.0.0.1"
     app_port: int = 8000
-    database_url: str = "postgresql+psycopg://console:change-me@127.0.0.1:5432/console"
+    database_url: str = "postgresql+psycopg://example:example@127.0.0.1:5432/console"
     database_pool_size: int = 5
     database_max_overflow: int = 10
     database_pool_timeout_seconds: float = 30.0

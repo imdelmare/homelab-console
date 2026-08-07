@@ -60,7 +60,7 @@ def test_api_ready_instance_schema_allows_only_allowlisted_driver_contracts():
         ApiProviderInstanceEntry(
             id="embedded_secret",
             driver="json_health_v1",
-            base_url="https://user:password@service.example.test",
+            base_url="https://example:example@service.example.test",
         )
 
 

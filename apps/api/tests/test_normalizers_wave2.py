@@ -197,7 +197,7 @@ def test_frigate_camera_config_projected():
                 "record": {"enabled": True},
                 "snapshots": {"enabled": False},
                 "zones": {"driveway": {"coordinates": "0,0,1,1"}},
-                "ffmpeg": {"inputs": [{"path": "rtsp://user:pw@10.0.0.9/stream"}]},
+                "ffmpeg": {"inputs": [{"path": "rtsp://example:example@10.0.0.9/stream"}]},
             }
         }
     }

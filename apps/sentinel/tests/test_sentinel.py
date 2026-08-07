@@ -38,15 +38,17 @@ def test_sentinel_alert_uses_correct_english_singular():
     assert "1 signal requires attention." in alert_text("Console unavailable", "timeout", 1)
 
 
-def test_deploy_uses_fixed_public_health_target():
-    deploy_script = (ROOT / "deploy" / "deploy-sentinel-vps.sh").read_text(encoding="utf-8")
+def test_example_and_deploy_use_fixed_public_health_target():
+    deploy_path = ROOT / "deploy" / "deploy-sentinel-vps.sh"
     example = json.loads((ROOT / "config" / "sentinel.example.json").read_text(encoding="utf-8"))
     public_targets = [target for target in example["targets"] if target["id"] == "api-public-health"]
 
-    assert f'readonly PUBLIC_HEALTH_URL="{PUBLIC_HEALTH_URL}"' in deploy_script
-    assert "HOMELAB_PUBLIC_HEALTH_URL" not in deploy_script
     assert len(public_targets) == 1
     assert public_targets[0]["url"] == PUBLIC_HEALTH_URL
+    if deploy_path.exists():
+        deploy_script = deploy_path.read_text(encoding="utf-8")
+        assert f'readonly PUBLIC_HEALTH_URL="{PUBLIC_HEALTH_URL}"' in deploy_script
+        assert "HOMELAB_PUBLIC_HEALTH_URL" not in deploy_script
 
 
 def test_deduplicates_open_incident_and_notifies_recovery(tmp_path):

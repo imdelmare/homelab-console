@@ -30,7 +30,7 @@ source .venv/bin/activate
 pip install -r requirements-dev.txt
 cd ../..
 
-TEST_DATABASE_URL=postgresql+psycopg://console:console@localhost:5432/postgres   ./scripts/run-test-suite.sh all
+TEST_DATABASE_URL=postgresql+psycopg://example:example@localhost:5432/postgres   ./scripts/run-test-suite.sh all
 ```
 
 Start from `config/homelab.example.yml` and add only targets you explicitly
