@@ -62,6 +62,17 @@
         text-rendering: geometricPrecision;
       }
 
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
       a {
         color: inherit;
       }
@@ -88,7 +99,7 @@
 
       .desktop {
         min-height: 100vh;
-        padding: 22px 22px 74px;
+        padding: 22px;
         overflow: hidden;
       }
 
@@ -96,43 +107,6 @@
         position: relative;
         width: min(1180px, 100%);
         margin: 0 auto;
-      }
-
-      .desktop-icons {
-        position: absolute;
-        top: 4px;
-        left: 0;
-        display: grid;
-        gap: 18px;
-        width: 82px;
-        color: var(--white);
-        text-align: center;
-        text-shadow: 1px 1px 0 var(--black);
-      }
-
-      .desktop-icon {
-        display: grid;
-        justify-items: center;
-        gap: 5px;
-        color: var(--white);
-        font-size: 12px;
-        text-decoration: none;
-      }
-
-      .desktop-icon svg {
-        width: 34px;
-        height: 34px;
-        filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.55));
-      }
-
-      .desktop-icon:hover span,
-      .desktop-icon:focus-visible span {
-        background: var(--blue);
-        outline: 1px dotted var(--white);
-      }
-
-      .desktop-icon:focus-visible {
-        outline: none;
       }
 
       .window {
@@ -191,9 +165,9 @@
       }
 
       .hero-window {
-        width: min(880px, calc(100% - 102px));
-        margin: 32px 0 70px auto;
-        animation: window-in 600ms steps(5, end) both;
+        width: min(980px, 100%);
+        margin: 32px auto 70px;
+        animation: window-in 320ms steps(4, end) both;
       }
 
       .hero-grid {
@@ -315,13 +289,41 @@
         gap: 9px;
       }
 
+      .terminal-row {
+        min-height: 19px;
+      }
+
+      .terminal-row.is-pending {
+        opacity: 0;
+        transform: translateY(2px);
+      }
+
+      .terminal-row.is-visible {
+        animation: terminal-line-in 120ms steps(2, end) both;
+      }
+
       .terminal-ok {
         color: #43ef8b;
       }
 
-      .terminal-prompt {
-        margin-top: 15px;
+      .terminal-mcp {
+        color: #7cc7ff;
+      }
+
+      .terminal-safe {
         color: var(--yellow);
+      }
+
+      .terminal-prompt {
+        color: var(--yellow);
+      }
+
+      .terminal-command {
+        margin-top: 15px;
+      }
+
+      .terminal-ready {
+        margin-top: 11px;
       }
 
       .cursor {
@@ -334,9 +336,13 @@
         animation: blink 1s steps(1, end) infinite;
       }
 
+      .typing-complete .typing-cursor {
+        display: none;
+      }
+
       .section {
-        width: min(1080px, calc(100% - 102px));
-        margin: 0 0 62px auto;
+        width: min(1080px, 100%);
+        margin: 0 auto 62px;
         scroll-margin-top: 22px;
       }
 
@@ -774,83 +780,6 @@
         justify-content: center;
       }
 
-      .taskbar {
-        position: fixed;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 100;
-        display: flex;
-        height: 42px;
-        align-items: center;
-        gap: 7px;
-        padding: 4px 6px;
-        border-top: 2px solid var(--white);
-        background: var(--surface);
-        box-shadow: inset 0 1px var(--surface-light);
-      }
-
-      .start-button {
-        display: inline-flex;
-        height: 32px;
-        align-items: center;
-        gap: 7px;
-        padding: 3px 10px;
-        border: 2px solid;
-        border-color: var(--white) var(--black) var(--black) var(--white);
-        background: var(--surface);
-        box-shadow: var(--raised);
-        font: 700 13px Tahoma, sans-serif;
-      }
-
-      .start-mark {
-        display: grid;
-        width: 17px;
-        height: 17px;
-        grid-template-columns: 1fr 1fr;
-        gap: 1px;
-        transform: skewY(-5deg);
-      }
-
-      .start-mark i:nth-child(1) { background: #f25022; }
-      .start-mark i:nth-child(2) { background: #7fba00; }
-      .start-mark i:nth-child(3) { background: #00a4ef; }
-      .start-mark i:nth-child(4) { background: #ffb900; }
-
-      .task-button {
-        min-width: 188px;
-        height: 31px;
-        padding: 5px 10px;
-        overflow: hidden;
-        border: 2px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        background: #b7b7b7;
-        box-shadow: var(--sunken);
-        font-size: 12px;
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .taskbar-status {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        margin-left: auto;
-        padding: 4px 10px;
-        border: 2px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        box-shadow: var(--sunken);
-        font-size: 12px;
-      }
-
-      .status-led {
-        width: 8px;
-        height: 8px;
-        background: var(--green);
-        box-shadow: 0 0 0 1px #006a46;
-      }
-
       @keyframes window-in {
         from {
           opacity: 0;
@@ -859,6 +788,17 @@
         to {
           opacity: 1;
           transform: translate(0, 0) scale(1);
+        }
+      }
+
+      @keyframes terminal-line-in {
+        from {
+          opacity: 0;
+          transform: translateY(2px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
 
@@ -872,11 +812,7 @@
 
       @media (max-width: 900px) {
         .desktop {
-          padding: 14px 14px 66px;
-        }
-
-        .desktop-icons {
-          display: none;
+          padding: 14px;
         }
 
         .hero-window,
@@ -1011,14 +947,6 @@
           width: 100%;
         }
 
-        .task-button {
-          min-width: 0;
-          flex: 1;
-        }
-
-        .taskbar-status .status-copy {
-          display: none;
-        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1040,40 +968,6 @@
 
     <main class="desktop" id="main">
       <div class="desktop-shell">
-        <nav class="desktop-icons" aria-label="Page shortcuts">
-          <a class="desktop-icon" href="#planes">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <path fill="#d8d8d8" stroke="#000" d="M3 3h26v19H3z" />
-              <path fill="#000080" d="M6 6h20v12H6z" />
-              <path fill="#fff" d="M13 22h6v4h6v3H7v-3h6z" />
-            </svg>
-            <span>Architecture</span>
-          </a>
-          <a class="desktop-icon" href="#security">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <path fill="#ffdd33" stroke="#000" d="M8 14V9a8 8 0 0116 0v5h3v15H5V14zm4 0h8V9a4 4 0 00-8 0z" />
-              <path fill="#000080" d="M14 19h4v6h-4z" />
-            </svg>
-            <span>Security</span>
-          </a>
-          <a class="desktop-icon" href="#providers">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <path fill="#c6c6c6" stroke="#000" d="M4 4h24v9H4zm0 15h24v9H4z" />
-              <path fill="#00a36c" d="M7 7h4v3H7zm0 15h4v3H7z" />
-              <path fill="#000080" d="M14 8h11v2H14zm0 15h11v2H14z" />
-            </svg>
-            <span>Providers</span>
-          </a>
-          <a class="desktop-icon" href="#agents">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <path fill="#c6c6c6" stroke="#000" d="M3 5h26v20H18l-5 4v-4H3z" />
-              <path fill="#000080" d="M7 9h18v3H7zm0 6h13v3H7z" />
-              <path fill="#00a36c" d="M23 19h3v3h-3z" />
-            </svg>
-            <span>MCP Agents</span>
-          </a>
-        </nav>
-
         <section class="window hero-window" aria-labelledby="hero-title">
           <div class="titlebar">
             <span class="titlebar-icon" aria-hidden="true"></span>
@@ -1099,17 +993,24 @@
                 <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">GitHub</a>
               </div>
             </div>
-            <div class="system-card" aria-label="System startup summary">
+            <div class="system-card" data-terminal aria-hidden="true">
               <strong>HOMELAB CONSOLE</strong><br />
-              Secure execution environment<br /><br />
-              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>typed tool registry</span></div>
-              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>shared execution core</span></div>
-              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>secret redaction</span></div>
-              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>audit trail</span></div>
-              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>operator approvals</span></div>
-              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>MCP stdio + HTTP</span></div>
-              <div class="terminal-prompt">C:\CONTROL&gt; ready<span class="cursor"></span></div>
+              Secure MCP session
+              <div class="terminal-prompt terminal-command terminal-row" data-terminal-row>
+                C:\CONTROL&gt; <span data-terminal-type>codex use browser-mcp</span><span class="cursor typing-cursor"></span>
+              </div>
+              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-mcp">[MCP]</span><span>connecting client</span></div>
+              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-ok">[OK]</span><span>identity authenticated</span></div>
+              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-mcp">[MCP]</span><span>browser.navigate /docs</span></div>
+              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-ok">[OK]</span><span>page loaded</span></div>
+              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-mcp">[MCP]</span><span>browser.snapshot</span></div>
+              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-safe">[SAFE]</span><span>read-only session</span></div>
+              <div class="terminal-prompt terminal-ready terminal-row" data-terminal-row>C:\CONTROL&gt; ready<span class="cursor"></span></div>
             </div>
+            <p class="sr-only">
+              Codex connects through browser MCP, authenticates its identity, opens the documentation,
+              captures a browser snapshot, and completes a safe read-only session.
+            </p>
           </div>
         </section>
 
@@ -1317,33 +1218,53 @@
       </div>
     </main>
 
-    <footer class="taskbar" aria-label="Landing page taskbar">
-      <div class="start-button" aria-hidden="true">
-        <span class="start-mark"><i></i><i></i><i></i><i></i></span>
-        Start
-      </div>
-      <div class="task-button">Homelab Console - Welcome</div>
-      <div class="taskbar-status">
-        <span class="status-led" aria-hidden="true"></span>
-        <span class="status-copy">Control plane</span>
-        <time id="clock">--:--</time>
-      </div>
-    </footer>
-
     <script>
       (() => {
-        const clock = document.querySelector("#clock");
-        const updateClock = () => {
-          clock.textContent = new Intl.DateTimeFormat("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-            timeZone: "Europe/Rome",
-          }).format(new Date());
+        const terminal = document.querySelector("[data-terminal]");
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!terminal || reducedMotion) {
+          return;
+        }
+
+        const rows = [...terminal.querySelectorAll("[data-terminal-row]")];
+        const typedText = terminal.querySelector("[data-terminal-type]");
+        const command = typedText.textContent;
+
+        rows.forEach((row) => row.classList.add("is-pending"));
+        typedText.textContent = "";
+
+        const wait = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+        const waitForVisiblePage = () => {
+          if (!document.hidden) {
+            return Promise.resolve();
+          }
+          return new Promise((resolve) => {
+            document.addEventListener("visibilitychange", resolve, { once: true });
+          });
         };
 
-        updateClock();
-        window.setInterval(updateClock, 30000);
+        const reveal = async (row, delay) => {
+          await waitForVisiblePage();
+          await wait(delay);
+          row.classList.remove("is-pending");
+          row.classList.add("is-visible");
+        };
+
+        const play = async () => {
+          await reveal(rows[0], 380);
+          for (const character of command) {
+            await waitForVisiblePage();
+            typedText.textContent += character;
+            await wait(character === " " ? 42 : 24);
+          }
+          rows[0].classList.add("typing-complete");
+
+          for (const row of rows.slice(1)) {
+            await reveal(row, 190);
+          }
+        };
+
+        play();
       })();
     </script>
   </body>
