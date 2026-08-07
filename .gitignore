@@ -1,0 +1,33 @@
+.env
+.env.local
+.env.native
+.env.sentinel
+.env.speedtest-probe
+# Operator-supplied, separately licensed Speedtest CLI binary. The public
+# repository and its release images must never redistribute this asset.
+local-assets/speedtest
+.claude/
+config/secrets.local.yml
+config/credentials.local.env
+config/homelab.local.yml
+config/sentinel.local.json
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+dist/
+build/
+apps/docs/.generated/
+apps/docs/.pages/
+test-results/
+.playwright-cli/
+*.sqlite3
+*.sqlite3.*
+*.db
+*.db.*
+data/
+*.bak
+*.bak-*
+*.backup
+.run/
+.DS_Store

@@ -1,0 +1,191 @@
+:root {
+  --vp-c-brand-1: #c94312;
+  --vp-c-brand-2: #a9340c;
+  --vp-c-brand-3: #852906;
+  --vp-c-brand-soft: rgba(201, 67, 18, 0.14);
+  --vp-c-bg: #f4f0e7;
+  --vp-c-bg-alt: #e9e2d4;
+  --vp-c-bg-elv: #fffdf7;
+  --vp-c-bg-soft: #ebe4d7;
+  --vp-c-text-1: #171a1d;
+  --vp-c-text-2: #4b4f51;
+  --vp-c-divider: #b9ad9b;
+  --vp-font-family-base: "Aptos", "Segoe UI", sans-serif;
+  --vp-font-family-mono: "IBM Plex Mono", "Cascadia Code", monospace;
+  --vp-layout-max-width: 1500px;
+}
+
+.dark {
+  --vp-c-brand-1: #ff7a3d;
+  --vp-c-brand-2: #ff9666;
+  --vp-c-brand-3: #ffad88;
+  --vp-c-brand-soft: rgba(255, 122, 61, 0.16);
+  --vp-c-bg: #141719;
+  --vp-c-bg-alt: #1c2022;
+  --vp-c-bg-elv: #24282a;
+  --vp-c-bg-soft: #202426;
+  --vp-c-text-1: #f3eee3;
+  --vp-c-text-2: #c0b9ad;
+  --vp-c-divider: #3b4144;
+}
+
+body {
+  background-image:
+    linear-gradient(rgba(19, 24, 26, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 24, 26, 0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.dark body {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+.VPNavBar {
+  border-bottom: 2px solid var(--vp-c-text-1) !important;
+  background: color-mix(in srgb, var(--vp-c-bg) 93%, transparent) !important;
+}
+
+.VPNavBarTitle .title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.VPNavBarMenuLink {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px !important;
+  text-transform: uppercase;
+}
+
+.VPSidebar {
+  background: color-mix(in srgb, var(--vp-c-bg-alt) 94%, transparent) !important;
+  border-right: 1px solid var(--vp-c-divider);
+}
+
+.VPSidebarItem .text {
+  font-size: 13px;
+}
+
+.VPSidebarItem.level-0 > .item > .text {
+  color: var(--vp-c-text-1);
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.VPDoc h1,
+.VPDoc h2,
+.VPHomeHero .name,
+.VPHomeHero .text {
+  font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+  letter-spacing: -0.035em;
+}
+
+.VPDoc h1 {
+  max-width: 780px;
+  font-size: clamp(38px, 6vw, 64px);
+  line-height: 0.98;
+}
+
+.VPDoc h2 {
+  margin-top: 56px;
+  border-top: 2px solid var(--vp-c-text-1);
+  padding-top: 16px;
+  font-size: 30px;
+}
+
+.VPDoc h3 {
+  font-family: var(--vp-font-family-mono);
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.VPHomeHero .container {
+  align-items: end;
+}
+
+.VPHomeHero .name {
+  color: var(--vp-c-brand-1) !important;
+  font-size: clamp(52px, 9vw, 96px);
+  line-height: 0.86;
+}
+
+.VPHomeHero .text {
+  max-width: 760px;
+  padding-top: 18px;
+  font-size: clamp(34px, 6vw, 68px);
+  line-height: 0.94;
+}
+
+.VPHomeHero .tagline {
+  max-width: 650px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 15px;
+}
+
+.VPFeature {
+  border: 1px solid var(--vp-c-text-1) !important;
+  border-radius: 0 !important;
+  background: var(--vp-c-bg-elv) !important;
+  box-shadow: 5px 5px 0 var(--vp-c-text-1);
+}
+
+.VPFeature .title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.VPButton {
+  border-radius: 0 !important;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+}
+
+.VPButton.brand {
+  box-shadow: 4px 4px 0 var(--vp-c-text-1);
+}
+
+.vp-doc div[class*="language-"] {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 0;
+}
+
+.vp-doc table {
+  display: table;
+  width: 100%;
+}
+
+.vp-doc th {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.custom-block {
+  border-radius: 0;
+  border-width: 0 0 0 4px;
+}
+
+@media (max-width: 640px) {
+  .VPHomeHero .name {
+    font-size: 50px;
+  }
+
+  .VPHomeHero .text {
+    font-size: 36px;
+  }
+
+  .VPFeature {
+    box-shadow: 3px 3px 0 var(--vp-c-text-1);
+  }
+}

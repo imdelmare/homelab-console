@@ -1,0 +1,32 @@
+# Homelab Console MCP HTTP — fallback deployment image
+#
+# Build context must be the repository root, e.g.:
+#   docker build -f deploy/Dockerfile.mcp -t homelab-console-mcp .
+
+FROM python:3.12-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Install API live dependencies plus the MCP SDK. The MCP requirements
+# file references ../api/requirements.txt, so keep the same directory layout.
+COPY apps/api/requirements.txt apps/api/requirements-prod.txt ./apps/api/
+COPY apps/mcp/requirements.txt ./apps/mcp/
+RUN cd apps/mcp && pip install --no-cache-dir -r ../api/requirements-prod.txt -r requirements.txt
+
+COPY apps/api/app ./apps/api/app
+COPY apps/api/alembic.ini ./apps/api/alembic.ini
+COPY apps/api/migrations ./apps/api/migrations
+COPY apps/mcp ./apps/mcp
+
+RUN useradd --create-home --uid 10002 --shell /usr/sbin/nologin mcp \
+    && mkdir -p /app/apps/api/data \
+    && chown -R mcp:mcp /app
+USER mcp
+
+EXPOSE 8765
+
+CMD ["python", "apps/mcp/server.py", "--transport", "streamable-http"]

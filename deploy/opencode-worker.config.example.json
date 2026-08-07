@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode-go/deepseek-v4-pro",
+  "small_model": "opencode-go/deepseek-v4-pro",
+  "default_agent": "homelab-fixer",
+  "enabled_providers": ["opencode-go"],
+  "share": "disabled",
+  "autoupdate": false,
+  "snapshot": false,
+  "formatter": false,
+  "lsp": false,
+  "mcp": {
+    "homelab-console": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8765/mcp/",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {file:/var/lib/homelab-opencode/homelab-mcp.token}"
+      }
+    }
+  }
+}

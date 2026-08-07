@@ -1,0 +1,18 @@
+services:
+  speedtest-probe:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.speedtest-probe
+    restart: unless-stopped
+    environment:
+      SPEEDTEST_PROBE_TOKEN: ${SPEEDTEST_PROBE_TOKEN:?SPEEDTEST_PROBE_TOKEN is required}
+      SPEEDTEST_PROBE_TIMEOUT_SECONDS: ${SPEEDTEST_PROBE_TIMEOUT_SECONDS:-120}
+    ports:
+      - "${SPEEDTEST_PROBE_BIND_ADDRESS:?SPEEDTEST_PROBE_BIND_ADDRESS must be a private LAN address}:8780:8780"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

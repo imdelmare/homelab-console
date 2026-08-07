@@ -1,0 +1,48 @@
+# Minimal, non-routable example inventory.
+# Copy this file to config/homelab.local.yml and declare only systems you own.
+
+hosts:
+  - id: example-hypervisor
+    name: Example Hypervisor
+    address: 192.0.2.10
+    kind: hypervisor
+    tags: [example, virtualization]
+    check_ports: [8006]
+
+dns:
+  resolvers:
+    - id: example-resolver
+      name: Example Resolver
+      address: 192.0.2.53
+      port: 53
+  targets:
+    - id: example-service
+      name: Example Service
+      domain: service.example.com
+      expected_addresses: [192.0.2.20]
+      internal: true
+
+http:
+  targets:
+    - id: example-health
+      name: Example Health Endpoint
+      url: https://service.example.com/health
+      expected_statuses: [200]
+      kind: health
+      owner: example
+
+tls:
+  certificate_targets:
+    - id: example-tls
+      name: Example TLS Endpoint
+      host: service.example.com
+      port: 443
+      server_name: service.example.com
+
+api_provider_instances: []
+dependencies:
+  nodes: []
+topology:
+  availability_groups: []
+  nodes: []
+  edges: []

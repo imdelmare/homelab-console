@@ -1,0 +1,34 @@
+# External Sentinel — VPS-only deployment.
+#
+# Run from the repository root on the VPS:
+#   docker compose -f deploy/docker-compose.sentinel.yml --env-file .env.sentinel up -d --build
+
+services:
+  sentinel:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.sentinel
+    restart: unless-stopped
+    environment:
+      SENTINEL_CONFIG_PATH: ${SENTINEL_CONFIG_PATH:-/app/config/sentinel.local.json}
+      SENTINEL_STATE_PATH: ${SENTINEL_STATE_PATH:-/app/data/sentinel.sqlite3}
+      SENTINEL_HEARTBEAT_TOKEN: ${SENTINEL_HEARTBEAT_TOKEN:-}
+      SENTINEL_LISTEN_HOST: ${SENTINEL_LISTEN_HOST:-0.0.0.0}
+      SENTINEL_LISTEN_PORT: ${SENTINEL_LISTEN_PORT:-8766}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID:-}
+    volumes:
+      - ../config:/app/config:ro
+      - sentinel-data:/app/data
+    ports:
+      # Bind explicitly. Prefer a reverse proxy/TLS in front of this when
+      # heartbeats cross the public internet.
+      - "${SENTINEL_BIND:-127.0.0.1:8766}:8766"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8766/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sentinel-data:

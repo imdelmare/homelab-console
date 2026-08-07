@@ -1,0 +1,1350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Homelab Console is an AI-native control plane with typed tools, operator-approved writes, and one shared execution core."
+    />
+    <meta name="theme-color" content="#007f7f" />
+    <meta property="og:title" content="Homelab Console" />
+    <meta
+      property="og:description"
+      content="Observe your homelab. Keep humans in control."
+    />
+    <meta property="og:type" content="website" />
+    <title>Homelab Console | AI-native control plane</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --desktop: #007f7f;
+        --desktop-dark: #006767;
+        --surface: #c6c6c6;
+        --surface-light: #dfdfdf;
+        --white: #ffffff;
+        --shadow: #808080;
+        --black: #0a0a0a;
+        --blue: #060084;
+        --blue-light: #1084d0;
+        --yellow: #ffdd33;
+        --green: #00a36c;
+        --red: #c90016;
+        --text-muted: #343b45;
+        --raised: inset 1px 1px 0 var(--white), inset -1px -1px 0 var(--shadow),
+          1px 1px 0 var(--black);
+        --sunken: inset 1px 1px 0 var(--shadow), inset -1px -1px 0 var(--white);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 280px;
+        margin: 0;
+        color: var(--black);
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          var(--desktop);
+        background-size: 4px 4px;
+        font-family: Tahoma, "MS Sans Serif", Geneva, sans-serif;
+        font-size: 14px;
+        line-height: 1.45;
+        -webkit-font-smoothing: none;
+        text-rendering: geometricPrecision;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        z-index: 1000;
+        padding: 6px 10px;
+        color: var(--white);
+        background: var(--blue);
+        transform: translateY(-150%);
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .desktop {
+        min-height: 100vh;
+        padding: 22px 22px 74px;
+        overflow: hidden;
+      }
+
+      .desktop-shell {
+        position: relative;
+        width: min(1180px, 100%);
+        margin: 0 auto;
+      }
+
+      .desktop-icons {
+        position: absolute;
+        top: 4px;
+        left: 0;
+        display: grid;
+        gap: 18px;
+        width: 82px;
+        color: var(--white);
+        text-align: center;
+        text-shadow: 1px 1px 0 var(--black);
+      }
+
+      .desktop-icon {
+        display: grid;
+        justify-items: center;
+        gap: 5px;
+        color: var(--white);
+        font-size: 12px;
+        text-decoration: none;
+      }
+
+      .desktop-icon svg {
+        width: 34px;
+        height: 34px;
+        filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.55));
+      }
+
+      .desktop-icon:hover span,
+      .desktop-icon:focus-visible span {
+        background: var(--blue);
+        outline: 1px dotted var(--white);
+      }
+
+      .desktop-icon:focus-visible {
+        outline: none;
+      }
+
+      .window {
+        background: var(--surface);
+        border: 2px solid;
+        border-color: var(--white) var(--black) var(--black) var(--white);
+        box-shadow: var(--raised);
+      }
+
+      .titlebar {
+        display: flex;
+        align-items: center;
+        min-height: 28px;
+        margin: 2px;
+        padding: 3px 4px 3px 7px;
+        color: var(--white);
+        background: linear-gradient(90deg, var(--blue), var(--blue-light));
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .titlebar-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        border: 1px solid var(--black);
+        background:
+          linear-gradient(135deg, transparent 42%, var(--blue) 43% 57%, transparent 58%),
+          var(--yellow);
+        box-shadow: inset 1px 1px var(--white);
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 3px;
+        margin-left: auto;
+      }
+
+      .window-control {
+        display: grid;
+        width: 20px;
+        height: 18px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid;
+        border-color: var(--white) var(--black) var(--black) var(--white);
+        color: var(--black);
+        background: var(--surface);
+        box-shadow: inset 1px 1px var(--surface-light), inset -1px -1px var(--shadow);
+        font: 700 11px/1 Tahoma, sans-serif;
+      }
+
+      .window-body {
+        padding: 24px;
+      }
+
+      .hero-window {
+        width: min(880px, calc(100% - 102px));
+        margin: 32px 0 70px auto;
+        animation: window-in 600ms steps(5, end) both;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(230px, 0.7fr);
+        gap: 30px;
+        align-items: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 14px;
+        padding: 4px 7px;
+        border: 1px solid var(--shadow);
+        background: var(--white);
+        box-shadow: var(--sunken);
+        font: 700 11px/1.2 "Courier New", monospace;
+        text-transform: uppercase;
+      }
+
+      .pulse {
+        width: 8px;
+        height: 8px;
+        background: var(--green);
+        box-shadow: 0 0 0 1px #006a46, 0 0 8px rgba(0, 163, 108, 0.85);
+        animation: pulse 1.8s steps(2, end) infinite;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 610px;
+        margin-bottom: 14px;
+        font-family: "Arial Black", Tahoma, sans-serif;
+        font-size: clamp(36px, 6vw, 68px);
+        line-height: 0.94;
+        letter-spacing: -0.055em;
+      }
+
+      h1 span {
+        display: block;
+        color: var(--blue);
+      }
+
+      .hero-copy {
+        max-width: 610px;
+        margin-bottom: 21px;
+        color: var(--text-muted);
+        font-size: 16px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border: 2px solid;
+        border-color: var(--white) var(--black) var(--black) var(--white);
+        color: var(--black);
+        background: var(--surface);
+        box-shadow: var(--raised);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .button-primary {
+        outline: 1px solid var(--black);
+        outline-offset: 2px;
+      }
+
+      .button:hover {
+        background: var(--surface-light);
+      }
+
+      .button:active {
+        border-color: var(--black) var(--white) var(--white) var(--black);
+        box-shadow: var(--sunken);
+        transform: translate(1px, 1px);
+      }
+
+      .button:focus-visible {
+        outline: 2px dotted var(--black);
+        outline-offset: 3px;
+      }
+
+      .system-card {
+        min-height: 246px;
+        padding: 12px;
+        border: 2px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        background: #101010;
+        color: #c8ffc8;
+        box-shadow: var(--sunken);
+        font: 12px/1.65 "Courier New", monospace;
+      }
+
+      .system-card strong {
+        color: var(--white);
+      }
+
+      .terminal-line {
+        display: flex;
+        gap: 9px;
+      }
+
+      .terminal-ok {
+        color: #43ef8b;
+      }
+
+      .terminal-prompt {
+        margin-top: 15px;
+        color: var(--yellow);
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 13px;
+        margin-left: 3px;
+        vertical-align: -2px;
+        background: #c8ffc8;
+        animation: blink 1s steps(1, end) infinite;
+      }
+
+      .section {
+        width: min(1080px, calc(100% - 102px));
+        margin: 0 0 62px auto;
+        scroll-margin-top: 22px;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 14px;
+        color: var(--white);
+        text-shadow: 1px 1px 0 var(--black);
+      }
+
+      .section-heading h2 {
+        margin-bottom: 0;
+        font: 700 clamp(24px, 4vw, 42px)/1 "Arial Black", Tahoma, sans-serif;
+        letter-spacing: -0.04em;
+      }
+
+      .section-heading p {
+        max-width: 440px;
+        margin-bottom: 2px;
+        text-align: right;
+      }
+
+      .plane-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+      }
+
+      .plane {
+        grid-column: span 2;
+      }
+
+      .plane:nth-child(4),
+      .plane:nth-child(5) {
+        grid-column: span 3;
+      }
+
+      .plane .window-body {
+        min-height: 164px;
+        padding: 17px;
+      }
+
+      .plane-number {
+        display: inline-grid;
+        width: 30px;
+        height: 30px;
+        margin-bottom: 13px;
+        place-items: center;
+        border: 1px solid var(--black);
+        color: var(--white);
+        background: var(--blue);
+        font: 700 14px/1 "Courier New", monospace;
+      }
+
+      .plane h3 {
+        margin-bottom: 6px;
+        font-size: 15px;
+      }
+
+      .plane p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .pipeline-window .window-body {
+        padding: 20px;
+      }
+
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 17px;
+        counter-reset: pipeline;
+      }
+
+      .pipeline-step {
+        position: relative;
+        min-width: 0;
+        padding: 11px 8px;
+        border: 1px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        background: var(--white);
+        box-shadow: var(--sunken);
+        text-align: center;
+        counter-increment: pipeline;
+      }
+
+      .pipeline-step::before {
+        content: counter(pipeline, decimal-leading-zero);
+        display: block;
+        margin-bottom: 5px;
+        color: var(--blue);
+        font: 700 17px/1 "Courier New", monospace;
+      }
+
+      .pipeline-step::after {
+        content: ">";
+        position: absolute;
+        top: 50%;
+        right: -14px;
+        color: var(--blue);
+        font: 700 16px/1 "Courier New", monospace;
+        transform: translateY(-50%);
+      }
+
+      .pipeline-step:last-child::after {
+        content: none;
+      }
+
+      .pipeline-step strong,
+      .pipeline-step small {
+        display: block;
+      }
+
+      .pipeline-step strong {
+        font-size: 12px;
+      }
+
+      .pipeline-step small {
+        margin-top: 2px;
+        color: var(--text-muted);
+        font-size: 10px;
+      }
+
+      .trust-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 14px;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 9px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .checklist li {
+        position: relative;
+        padding: 10px 10px 10px 36px;
+        border: 1px solid var(--shadow);
+        background: var(--white);
+        box-shadow: var(--sunken);
+      }
+
+      .checklist li::before {
+        content: "";
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 11px;
+        height: 11px;
+        border: 1px solid #006a46;
+        background: var(--green);
+        box-shadow: inset 1px 1px rgba(255, 255, 255, 0.55);
+      }
+
+      .approval-dialog {
+        display: grid;
+        min-height: 100%;
+        align-content: center;
+        padding: 16px;
+        border: 2px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        background: var(--surface-light);
+        box-shadow: var(--sunken);
+      }
+
+      .approval-title {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .warning-icon {
+        width: 0;
+        height: 0;
+        border-right: 19px solid transparent;
+        border-bottom: 34px solid var(--yellow);
+        border-left: 19px solid transparent;
+        filter: drop-shadow(1px 1px 0 var(--black));
+      }
+
+      .approval-code {
+        margin: 10px 0 14px;
+        padding: 8px;
+        border: 1px solid var(--shadow);
+        background: var(--white);
+        box-shadow: var(--sunken);
+        font: 12px/1.5 "Courier New", monospace;
+      }
+
+      .approval-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .mini-button {
+        min-width: 76px;
+        padding: 5px 10px;
+        border: 2px solid;
+        border-color: var(--white) var(--black) var(--black) var(--white);
+        background: var(--surface);
+        box-shadow: var(--raised);
+        font: 12px Tahoma, sans-serif;
+      }
+
+      .provider-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .provider {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 9px;
+        border: 1px solid;
+        border-color: var(--white) var(--shadow) var(--shadow) var(--white);
+        background: var(--surface-light);
+        box-shadow: 1px 1px 0 var(--black);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .provider::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        background: var(--green);
+        box-shadow: 0 0 0 1px #006a46;
+      }
+
+      .agent-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .agent-card {
+        display: grid;
+        min-height: 142px;
+        align-content: start;
+        justify-items: start;
+        padding: 14px;
+        border: 1px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        background: var(--white);
+        box-shadow: var(--sunken);
+      }
+
+      .agent-mark {
+        display: grid;
+        width: 35px;
+        height: 35px;
+        margin-bottom: 11px;
+        place-items: center;
+        border: 1px solid var(--black);
+        color: var(--white);
+        background: var(--blue);
+        box-shadow: 2px 2px 0 var(--shadow);
+        font: 700 14px/1 "Courier New", monospace;
+      }
+
+      .agent-card:nth-child(2) .agent-mark { background: #111111; }
+      .agent-card:nth-child(3) .agent-mark { background: #c94215; }
+      .agent-card:nth-child(4) .agent-mark { background: #4540a8; }
+
+      .agent-card h3 {
+        margin-bottom: 4px;
+        font-size: 15px;
+      }
+
+      .agent-card p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .mcp-path {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        padding: 13px;
+        border: 2px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        background: var(--surface-light);
+        box-shadow: var(--sunken);
+        counter-reset: pairing;
+      }
+
+      .mcp-step {
+        position: relative;
+        padding-left: 30px;
+        counter-increment: pairing;
+        font-size: 12px;
+      }
+
+      .mcp-step::before {
+        content: counter(pairing);
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: grid;
+        width: 22px;
+        height: 22px;
+        place-items: center;
+        border: 1px solid var(--black);
+        color: var(--white);
+        background: var(--blue);
+        font: 700 11px/1 "Courier New", monospace;
+      }
+
+      .mcp-step::after {
+        content: ">";
+        position: absolute;
+        top: 2px;
+        right: -14px;
+        color: var(--blue);
+        font: 700 15px/1 "Courier New", monospace;
+      }
+
+      .mcp-step:last-child::after {
+        content: none;
+      }
+
+      .mcp-step strong,
+      .mcp-step span {
+        display: block;
+      }
+
+      .mcp-step span {
+        margin-top: 2px;
+        color: var(--text-muted);
+      }
+
+      .github-window .window-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 26px;
+        align-items: center;
+        padding: 22px 24px;
+      }
+
+      .github-copy {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 17px;
+        align-items: center;
+      }
+
+      .github-mark {
+        display: grid;
+        width: 58px;
+        height: 58px;
+        place-items: center;
+        border: 2px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        color: var(--white);
+        background: #111111;
+        box-shadow: var(--sunken);
+      }
+
+      .github-mark svg {
+        width: 35px;
+        height: 35px;
+        fill: currentColor;
+      }
+
+      .github-copy h2 {
+        margin-bottom: 4px;
+        font-size: clamp(21px, 3vw, 31px);
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+      }
+
+      .github-copy p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+      }
+
+      .github-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .star-button {
+        color: var(--white);
+        background: var(--blue);
+        text-shadow: 1px 1px var(--black);
+      }
+
+      .star-button:hover {
+        background: #1717a4;
+      }
+
+      .star-icon {
+        width: 17px;
+        height: 17px;
+        fill: var(--yellow);
+        stroke: var(--black);
+        stroke-width: 1.2;
+      }
+
+      .final-window {
+        text-align: center;
+      }
+
+      .final-window .window-body {
+        padding: 34px 20px;
+      }
+
+      .final-window h2 {
+        margin-bottom: 8px;
+        font: 700 clamp(28px, 5vw, 48px)/1 "Arial Black", Tahoma, sans-serif;
+        letter-spacing: -0.04em;
+      }
+
+      .final-window p {
+        margin-bottom: 20px;
+        color: var(--text-muted);
+      }
+
+      .final-window .button-row {
+        justify-content: center;
+      }
+
+      .taskbar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        display: flex;
+        height: 42px;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 6px;
+        border-top: 2px solid var(--white);
+        background: var(--surface);
+        box-shadow: inset 0 1px var(--surface-light);
+      }
+
+      .start-button {
+        display: inline-flex;
+        height: 32px;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 10px;
+        border: 2px solid;
+        border-color: var(--white) var(--black) var(--black) var(--white);
+        background: var(--surface);
+        box-shadow: var(--raised);
+        font: 700 13px Tahoma, sans-serif;
+      }
+
+      .start-mark {
+        display: grid;
+        width: 17px;
+        height: 17px;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        transform: skewY(-5deg);
+      }
+
+      .start-mark i:nth-child(1) { background: #f25022; }
+      .start-mark i:nth-child(2) { background: #7fba00; }
+      .start-mark i:nth-child(3) { background: #00a4ef; }
+      .start-mark i:nth-child(4) { background: #ffb900; }
+
+      .task-button {
+        min-width: 188px;
+        height: 31px;
+        padding: 5px 10px;
+        overflow: hidden;
+        border: 2px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        background: #b7b7b7;
+        box-shadow: var(--sunken);
+        font-size: 12px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .taskbar-status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-left: auto;
+        padding: 4px 10px;
+        border: 2px solid;
+        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
+        box-shadow: var(--sunken);
+        font-size: 12px;
+      }
+
+      .status-led {
+        width: 8px;
+        height: 8px;
+        background: var(--green);
+        box-shadow: 0 0 0 1px #006a46;
+      }
+
+      @keyframes window-in {
+        from {
+          opacity: 0;
+          transform: translate(16px, 10px) scale(0.985);
+        }
+        to {
+          opacity: 1;
+          transform: translate(0, 0) scale(1);
+        }
+      }
+
+      @keyframes pulse {
+        50% { opacity: 0.45; }
+      }
+
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+
+      @media (max-width: 900px) {
+        .desktop {
+          padding: 14px 14px 66px;
+        }
+
+        .desktop-icons {
+          display: none;
+        }
+
+        .hero-window,
+        .section {
+          width: 100%;
+        }
+
+        .hero-window {
+          margin-top: 14px;
+          margin-bottom: 48px;
+        }
+
+        .hero-grid,
+        .trust-grid,
+        .github-window .window-body {
+          grid-template-columns: 1fr;
+        }
+
+        .github-actions {
+          justify-content: flex-start;
+        }
+
+        .plane-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .plane,
+        .plane:nth-child(4),
+        .plane:nth-child(5) {
+          grid-column: span 1;
+        }
+
+        .plane:last-child {
+          grid-column: 1 / -1;
+        }
+
+        .pipeline {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .agent-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .pipeline-step:nth-child(4)::after {
+          content: none;
+        }
+      }
+
+      @media (max-width: 620px) {
+        body {
+          font-size: 13px;
+        }
+
+        .window-body {
+          padding: 17px;
+        }
+
+        h1 {
+          font-size: clamp(34px, 13vw, 54px);
+        }
+
+        .hero-copy {
+          font-size: 14px;
+        }
+
+        .section {
+          margin-bottom: 44px;
+        }
+
+        .section-heading {
+          display: block;
+        }
+
+        .section-heading p {
+          margin-top: 8px;
+          text-align: left;
+        }
+
+        .plane-grid,
+        .pipeline {
+          grid-template-columns: 1fr;
+        }
+
+        .agent-grid,
+        .mcp-path {
+          grid-template-columns: 1fr;
+        }
+
+        .mcp-step::after {
+          content: "v";
+          top: auto;
+          right: 50%;
+          bottom: -16px;
+          transform: translateX(50%);
+        }
+
+        .mcp-step:last-child::after {
+          content: none;
+        }
+
+        .plane:last-child {
+          grid-column: auto;
+        }
+
+        .pipeline-step::after,
+        .pipeline-step:nth-child(4)::after {
+          content: "v";
+          top: auto;
+          right: 50%;
+          bottom: -17px;
+          transform: translateX(50%);
+        }
+
+        .pipeline-step:last-child::after {
+          content: none;
+        }
+
+        .button-row {
+          display: grid;
+        }
+
+        .github-copy {
+          grid-template-columns: 1fr;
+        }
+
+        .github-actions {
+          display: grid;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .task-button {
+          min-width: 0;
+          flex: 1;
+        }
+
+        .taskbar-status .status-copy {
+          display: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <main class="desktop" id="main">
+      <div class="desktop-shell">
+        <nav class="desktop-icons" aria-label="Page shortcuts">
+          <a class="desktop-icon" href="#planes">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path fill="#d8d8d8" stroke="#000" d="M3 3h26v19H3z" />
+              <path fill="#000080" d="M6 6h20v12H6z" />
+              <path fill="#fff" d="M13 22h6v4h6v3H7v-3h6z" />
+            </svg>
+            <span>Architecture</span>
+          </a>
+          <a class="desktop-icon" href="#security">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path fill="#ffdd33" stroke="#000" d="M8 14V9a8 8 0 0116 0v5h3v15H5V14zm4 0h8V9a4 4 0 00-8 0z" />
+              <path fill="#000080" d="M14 19h4v6h-4z" />
+            </svg>
+            <span>Security</span>
+          </a>
+          <a class="desktop-icon" href="#providers">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path fill="#c6c6c6" stroke="#000" d="M4 4h24v9H4zm0 15h24v9H4z" />
+              <path fill="#00a36c" d="M7 7h4v3H7zm0 15h4v3H7z" />
+              <path fill="#000080" d="M14 8h11v2H14zm0 15h11v2H14z" />
+            </svg>
+            <span>Providers</span>
+          </a>
+          <a class="desktop-icon" href="#agents">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path fill="#c6c6c6" stroke="#000" d="M3 5h26v20H18l-5 4v-4H3z" />
+              <path fill="#000080" d="M7 9h18v3H7zm0 6h13v3H7z" />
+              <path fill="#00a36c" d="M23 19h3v3h-3z" />
+            </svg>
+            <span>MCP Agents</span>
+          </a>
+        </nav>
+
+        <section class="window hero-window" aria-labelledby="hero-title">
+          <div class="titlebar">
+            <span class="titlebar-icon" aria-hidden="true"></span>
+            Homelab Console - Welcome
+            <span class="window-controls" aria-hidden="true">
+              <span class="window-control">_</span>
+              <span class="window-control">□</span>
+              <span class="window-control">x</span>
+            </span>
+          </div>
+          <div class="window-body hero-grid">
+            <div>
+              <div class="eyebrow"><span class="pulse"></span> Reference control plane</div>
+              <h1 id="hero-title">Observe everything.<span>Keep humans in control.</span></h1>
+              <p class="hero-copy">
+                Connect Claude, Codex, OpenCode, or Cline as authenticated MCP clients. They all
+                inspect infrastructure through the same typed, auditable tools, while every write
+                remains narrow, reviewed, and explicitly approved.
+              </p>
+              <div class="button-row">
+                <a class="button" href="#planes">Explore Architecture</a>
+                <a class="button button-primary" href="./docs/">Read the Docs</a>
+                <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">GitHub</a>
+              </div>
+            </div>
+            <div class="system-card" aria-label="System startup summary">
+              <strong>HOMELAB CONSOLE</strong><br />
+              Secure execution environment<br /><br />
+              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>typed tool registry</span></div>
+              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>shared execution core</span></div>
+              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>secret redaction</span></div>
+              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>audit trail</span></div>
+              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>operator approvals</span></div>
+              <div class="terminal-line"><span class="terminal-ok">[OK]</span><span>MCP stdio + HTTP</span></div>
+              <div class="terminal-prompt">C:\CONTROL&gt; ready<span class="cursor"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="planes" aria-labelledby="planes-title">
+          <div class="section-heading">
+            <h2 id="planes-title">Five planes. One core.</h2>
+            <p>Each layer has a distinct job and a deliberately limited trust boundary.</p>
+          </div>
+          <div class="plane-grid">
+            <article class="window plane">
+              <div class="titlebar">Control Plane</div>
+              <div class="window-body">
+                <span class="plane-number">01</span>
+                <h3>The canonical state</h3>
+                <p>Inventory, identities, tasks, approvals, configuration, and a durable audit trail.</p>
+              </div>
+            </article>
+            <article class="window plane">
+              <div class="titlebar">Tool Plane</div>
+              <div class="window-body">
+                <span class="plane-number">02</span>
+                <h3>Narrow by default</h3>
+                <p>Explicit, typed capabilities instead of arbitrary shell, SSH, HTTP, or raw APIs.</p>
+              </div>
+            </article>
+            <article class="window plane">
+              <div class="titlebar">Model Plane</div>
+              <div class="window-body">
+                <span class="plane-number">03</span>
+                <h3>Reasoning without privilege</h3>
+                <p>Models receive bounded, redacted context and never hold infrastructure credentials.</p>
+              </div>
+            </article>
+            <article class="window plane">
+              <div class="titlebar">Watcher Plane</div>
+              <div class="window-body">
+                <span class="plane-number">04</span>
+                <h3>Detect, deduplicate, report</h3>
+                <p>Scheduled read-only observations create incidents and tasks without executing fixes.</p>
+              </div>
+            </article>
+            <article class="window plane">
+              <div class="titlebar">Operator Plane</div>
+              <div class="window-body">
+                <span class="plane-number">05</span>
+                <h3>Human authority</h3>
+                <p>Web desktop, Telegram, and authenticated MCP clients share one governed surface.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="pipeline-title">
+          <div class="section-heading">
+            <h2 id="pipeline-title">One execution path.</h2>
+            <p>REST, MCP, Telegram, and watchers terminate in the same guarded function.</p>
+          </div>
+          <div class="window pipeline-window">
+            <div class="titlebar">execute_tool</div>
+            <div class="window-body pipeline">
+              <div class="pipeline-step"><strong>Lookup</strong><small>registry</small></div>
+              <div class="pipeline-step"><strong>Validate</strong><small>Pydantic</small></div>
+              <div class="pipeline-step"><strong>Authenticate</strong><small>actor</small></div>
+              <div class="pipeline-step"><strong>Authorize</strong><small>policy</small></div>
+              <div class="pipeline-step"><strong>Invoke</strong><small>provider</small></div>
+              <div class="pipeline-step"><strong>Redact</strong><small>secrets</small></div>
+              <div class="pipeline-step"><strong>Record</strong><small>audit</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="security" aria-labelledby="security-title">
+          <div class="section-heading">
+            <h2 id="security-title">Safety is architecture.</h2>
+            <p>Agents can request actions. Only the operator can authorize a write.</p>
+          </div>
+          <div class="window">
+            <div class="titlebar">Security Properties</div>
+            <div class="window-body trust-grid">
+              <ul class="checklist">
+                <li><strong>No generic remote execution.</strong> No arbitrary shell or SSH capability.</li>
+                <li><strong>No raw provider access.</strong> Every endpoint and target is bounded.</li>
+                <li><strong>Single-use approvals.</strong> Write consent is input-bound and expires.</li>
+                <li><strong>Central redaction.</strong> Sensitive output is stripped before it leaves the core.</li>
+                <li><strong>Structured evidence.</strong> Invocations, outcomes, and task history remain auditable.</li>
+              </ul>
+              <div class="approval-dialog" aria-label="Example operator approval dialog">
+                <div class="approval-title">
+                  <span class="warning-icon" aria-hidden="true"></span>
+                  Operator approval required
+                </div>
+                <p>An authenticated agent requested one exact write invocation.</p>
+                <div class="approval-code">tool: proxmox.lxc.start<br />target: inventory-validated<br />approval: single-use</div>
+                <div class="approval-actions" aria-hidden="true">
+                  <button class="mini-button" type="button" tabindex="-1">Deny</button>
+                  <button class="mini-button" type="button" tabindex="-1">Approve</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="providers" aria-labelledby="providers-title">
+          <div class="section-heading">
+            <h2 id="providers-title">Your stack, normalized.</h2>
+            <p>Different protocols and products become predictable, typed observations.</p>
+          </div>
+          <div class="window">
+            <div class="titlebar">Provider Connections</div>
+            <div class="window-body provider-list">
+              <span class="provider">Proxmox VE</span>
+              <span class="provider">Proxmox Backup Server</span>
+              <span class="provider">OPNsense</span>
+              <span class="provider">MikroTik</span>
+              <span class="provider">FritzBox</span>
+              <span class="provider">Home Assistant</span>
+              <span class="provider">Frigate</span>
+              <span class="provider">AdGuard Home</span>
+              <span class="provider">Nextcloud</span>
+              <span class="provider">NUT UPS</span>
+              <span class="provider">Asterisk</span>
+              <span class="provider">Uptime Kuma</span>
+              <span class="provider">EMQX</span>
+              <span class="provider">Cloudflare Tunnels</span>
+              <span class="provider">ZeroTier</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="agents" aria-labelledby="agents-title">
+          <div class="section-heading">
+            <h2 id="agents-title">Bring your own AI agent.</h2>
+            <p>Use the MCP client you already work with. Homelab Console keeps the policy.</p>
+          </div>
+          <div class="window">
+            <div class="titlebar">MCP Client Setup</div>
+            <div class="window-body">
+              <div class="agent-grid">
+                <article class="agent-card">
+                  <span class="agent-mark" aria-hidden="true">CL</span>
+                  <h3>Claude</h3>
+                  <p>Connect Claude as an external MCP agent over stdio or authenticated HTTP.</p>
+                </article>
+                <article class="agent-card">
+                  <span class="agent-mark" aria-hidden="true">CX</span>
+                  <h3>Codex</h3>
+                  <p>Give Codex the same governed tool catalog and persistent task context.</p>
+                </article>
+                <article class="agent-card">
+                  <span class="agent-mark" aria-hidden="true">OC</span>
+                  <h3>OpenCode</h3>
+                  <p>Pair OpenCode with its own identity, token, audit trail, and task ownership.</p>
+                </article>
+                <article class="agent-card">
+                  <span class="agent-mark" aria-hidden="true">CN</span>
+                  <h3>Cline</h3>
+                  <p>Use Cline against the identical MCP surface without exposing provider secrets.</p>
+                </article>
+              </div>
+              <div class="mcp-path" aria-label="MCP client connection flow">
+                <div class="mcp-step"><strong>Choose a client</strong><span>Claude, Codex, OpenCode, or Cline</span></div>
+                <div class="mcp-step"><strong>Request pairing</strong><span>The operator receives it on Telegram</span></div>
+                <div class="mcp-step"><strong>Receive a token</strong><span>Individual, revocable client identity</span></div>
+                <div class="mcp-step"><strong>Discover tools</strong><span>Only enabled, governed capabilities</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section window github-window" aria-labelledby="github-title">
+          <div class="titlebar">GitHub - homelab-mcp</div>
+          <div class="window-body">
+            <div class="github-copy">
+              <span class="github-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 .7a11.5 11.5 0 00-3.64 22.4c.58.1.79-.25.79-.56v-2.23c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.74-1.55-2.58-.29-5.29-1.29-5.29-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.94 10.94 0 015.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.76.12 3.05.74.8 1.18 1.83 1.18 3.09 0 4.41-2.72 5.39-5.3 5.68.42.36.79 1.06.79 2.14v3.27c0 .31.21.67.8.56A11.5 11.5 0 0012 .7z" />
+                </svg>
+              </span>
+              <div>
+                <h2 id="github-title">Free project. Available on GitHub.</h2>
+                <p>Explore the source on GitHub, run it in your own lab, and leave a star if the project helps you.</p>
+              </div>
+            </div>
+            <div class="github-actions">
+              <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">View source</a>
+              <a class="button star-button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">
+                <svg class="star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.4 2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.21l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94z" /></svg>
+                Star on GitHub
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section window final-window" aria-labelledby="final-title">
+          <div class="titlebar">Homelab Console - Ready</div>
+          <div class="window-body">
+            <h2 id="final-title">Give agents tools.<br />Never give away control.</h2>
+            <p>Explore the source, deploy your own control plane, and pair your preferred MCP agent.</p>
+            <div class="button-row">
+              <a class="button" href="./docs/">Read the Field Manual</a>
+              <a class="button button-primary" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">Get Homelab Console on GitHub</a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="taskbar" aria-label="Landing page taskbar">
+      <div class="start-button" aria-hidden="true">
+        <span class="start-mark"><i></i><i></i><i></i><i></i></span>
+        Start
+      </div>
+      <div class="task-button">Homelab Console - Welcome</div>
+      <div class="taskbar-status">
+        <span class="status-led" aria-hidden="true"></span>
+        <span class="status-copy">Control plane</span>
+        <time id="clock">--:--</time>
+      </div>
+    </footer>
+
+    <script>
+      (() => {
+        const clock = document.querySelector("#clock");
+        const updateClock = () => {
+          clock.textContent = new Intl.DateTimeFormat("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone: "Europe/Rome",
+          }).format(new Date());
+        };
+
+        updateClock();
+        window.setInterval(updateClock, 30000);
+      })();
+    </script>
+  </body>
+</html>
