@@ -42,19 +42,11 @@
         box-sizing: border-box;
       }
 
-      html {
-        scroll-behavior: smooth;
-      }
-
       body {
         min-width: 280px;
         margin: 0;
         color: var(--black);
-        background:
-          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-          var(--desktop);
-        background-size: 4px 4px;
+        background: var(--desktop);
         font-family: Tahoma, "MS Sans Serif", Geneva, sans-serif;
         font-size: 14px;
         line-height: 1.45;
@@ -165,9 +157,8 @@
       }
 
       .hero-window {
-        width: min(980px, 100%);
+        width: min(1080px, 100%);
         margin: 32px auto 70px;
-        animation: window-in 320ms steps(4, end) both;
       }
 
       .hero-grid {
@@ -190,12 +181,11 @@
         text-transform: uppercase;
       }
 
-      .pulse {
+      .status-dot {
         width: 8px;
         height: 8px;
         background: var(--green);
-        box-shadow: 0 0 0 1px #006a46, 0 0 8px rgba(0, 163, 108, 0.85);
-        animation: pulse 1.8s steps(2, end) infinite;
+        box-shadow: 0 0 0 1px #006a46;
       }
 
       h1,
@@ -293,15 +283,6 @@
         min-height: 19px;
       }
 
-      .terminal-row.is-pending {
-        opacity: 0;
-        transform: translateY(2px);
-      }
-
-      .terminal-row.is-visible {
-        animation: terminal-line-in 120ms steps(2, end) both;
-      }
-
       .terminal-ok {
         color: #43ef8b;
       }
@@ -324,20 +305,6 @@
 
       .terminal-ready {
         margin-top: 11px;
-      }
-
-      .cursor {
-        display: inline-block;
-        width: 8px;
-        height: 13px;
-        margin-left: 3px;
-        vertical-align: -2px;
-        background: #c8ffc8;
-        animation: blink 1s steps(1, end) infinite;
-      }
-
-      .typing-complete .typing-cursor {
-        display: none;
       }
 
       .section {
@@ -780,36 +747,6 @@
         justify-content: center;
       }
 
-      @keyframes window-in {
-        from {
-          opacity: 0;
-          transform: translate(16px, 10px) scale(0.985);
-        }
-        to {
-          opacity: 1;
-          transform: translate(0, 0) scale(1);
-        }
-      }
-
-      @keyframes terminal-line-in {
-        from {
-          opacity: 0;
-          transform: translateY(2px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes pulse {
-        50% { opacity: 0.45; }
-      }
-
-      @keyframes blink {
-        50% { opacity: 0; }
-      }
-
       @media (max-width: 900px) {
         .desktop {
           padding: 14px;
@@ -949,18 +886,6 @@
 
       }
 
-      @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
-
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-        }
-      }
     </style>
   </head>
   <body>
@@ -980,7 +905,7 @@
           </div>
           <div class="window-body hero-grid">
             <div>
-              <div class="eyebrow"><span class="pulse"></span> Reference control plane</div>
+              <div class="eyebrow"><span class="status-dot"></span> Reference control plane</div>
               <h1 id="hero-title">Observe everything.<span>Keep humans in control.</span></h1>
               <p class="hero-copy">
                 Connect Claude, Codex, OpenCode, or Cline as authenticated MCP clients. They all
@@ -993,19 +918,19 @@
                 <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">GitHub</a>
               </div>
             </div>
-            <div class="system-card" data-terminal aria-hidden="true">
+            <div class="system-card" aria-hidden="true">
               <strong>HOMELAB CONSOLE</strong><br />
               Secure MCP session
-              <div class="terminal-prompt terminal-command terminal-row" data-terminal-row>
-                C:\CONTROL&gt; <span data-terminal-type>codex use browser-mcp</span><span class="cursor typing-cursor"></span>
+              <div class="terminal-prompt terminal-command terminal-row">
+                C:\CONTROL&gt; codex use browser-mcp
               </div>
-              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-mcp">[MCP]</span><span>connecting client</span></div>
-              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-ok">[OK]</span><span>identity authenticated</span></div>
-              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-mcp">[MCP]</span><span>browser.navigate /docs</span></div>
-              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-ok">[OK]</span><span>page loaded</span></div>
-              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-mcp">[MCP]</span><span>browser.snapshot</span></div>
-              <div class="terminal-line terminal-row" data-terminal-row><span class="terminal-safe">[SAFE]</span><span>read-only session</span></div>
-              <div class="terminal-prompt terminal-ready terminal-row" data-terminal-row>C:\CONTROL&gt; ready<span class="cursor"></span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-mcp">[MCP]</span><span>connecting client</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>identity authenticated</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-mcp">[MCP]</span><span>browser.navigate /docs</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>page loaded</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-mcp">[MCP]</span><span>browser.snapshot</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-safe">[SAFE]</span><span>read-only session</span></div>
+              <div class="terminal-prompt terminal-ready terminal-row">C:\CONTROL&gt; ready</div>
             </div>
             <p class="sr-only">
               Codex connects through browser MCP, authenticates its identity, opens the documentation,
@@ -1218,54 +1143,5 @@
       </div>
     </main>
 
-    <script>
-      (() => {
-        const terminal = document.querySelector("[data-terminal]");
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (!terminal || reducedMotion) {
-          return;
-        }
-
-        const rows = [...terminal.querySelectorAll("[data-terminal-row]")];
-        const typedText = terminal.querySelector("[data-terminal-type]");
-        const command = typedText.textContent;
-
-        rows.forEach((row) => row.classList.add("is-pending"));
-        typedText.textContent = "";
-
-        const wait = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-        const waitForVisiblePage = () => {
-          if (!document.hidden) {
-            return Promise.resolve();
-          }
-          return new Promise((resolve) => {
-            document.addEventListener("visibilitychange", resolve, { once: true });
-          });
-        };
-
-        const reveal = async (row, delay) => {
-          await waitForVisiblePage();
-          await wait(delay);
-          row.classList.remove("is-pending");
-          row.classList.add("is-visible");
-        };
-
-        const play = async () => {
-          await reveal(rows[0], 380);
-          for (const character of command) {
-            await waitForVisiblePage();
-            typedText.textContent += character;
-            await wait(character === " " ? 42 : 24);
-          }
-          rows[0].classList.add("typing-complete");
-
-          for (const row of rows.slice(1)) {
-            await reveal(row, 190);
-          }
-        };
-
-        play();
-      })();
-    </script>
   </body>
 </html>
