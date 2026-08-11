@@ -7,33 +7,31 @@
       name="description"
       content="Run your homelab privately with a small local AI. Homelab Console gives lightweight models typed tools, bounded context, approvals, and audit."
     />
-    <meta name="theme-color" content="#007f7f" />
+    <meta name="theme-color" content="#f1eee5" />
     <meta property="og:title" content="Homelab Console" />
     <meta
       property="og:description"
       content="The infrastructure layer that makes small local AI useful. No cloud AI required."
     />
     <meta property="og:type" content="website" />
-    <title>Homelab Console | Run your homelab with local AI</title>
+    <title>Homelab Console | Quiet, private homelab operations</title>
     <style>
       :root {
         color-scheme: light;
-        --desktop: #007f7f;
-        --desktop-dark: #006767;
-        --surface: #c6c6c6;
-        --surface-light: #dfdfdf;
-        --white: #ffffff;
-        --shadow: #808080;
-        --black: #0a0a0a;
-        --blue: #060084;
-        --blue-light: #1084d0;
-        --yellow: #ffdd33;
-        --green: #00a36c;
-        --red: #c90016;
-        --text-muted: #343b45;
-        --raised: inset 1px 1px 0 var(--white), inset -1px -1px 0 var(--shadow),
-          1px 1px 0 var(--black);
-        --sunken: inset 1px 1px 0 var(--shadow), inset -1px -1px 0 var(--white);
+        --canvas: #f1eee5;
+        --surface: #faf8f2;
+        --ink: #191914;
+        --muted: #6f6c63;
+        --line: #d2cdc0;
+        --signal: #dc4b2f;
+        --signal-soft: #f4d8cf;
+        --success: #285c42;
+        --dark: #20211d;
+        --dark-line: #41423c;
+        --focus: #2556a8;
+        --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-display: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+        --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       }
 
       *,
@@ -42,150 +40,155 @@
         box-sizing: border-box;
       }
 
-      body {
-        min-width: 280px;
-        margin: 0;
-        color: var(--black);
-        background: var(--desktop);
-        font-family: Tahoma, "MS Sans Serif", Geneva, sans-serif;
-        font-size: 14px;
-        line-height: 1.45;
-        -webkit-font-smoothing: none;
-        text-rendering: geometricPrecision;
+      html {
+        scroll-behavior: smooth;
       }
 
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
+      body {
+        min-width: 300px;
+        margin: 0;
+        color: var(--ink);
+        background: var(--canvas);
+        font-family: var(--font-ui);
+        font-size: 14px;
+        line-height: 1.5;
+        text-rendering: optimizeLegibility;
       }
 
       a {
         color: inherit;
       }
 
-      button,
-      a {
-        -webkit-tap-highlight-color: transparent;
+      a:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 4px;
       }
 
       .skip-link {
         position: fixed;
-        top: 8px;
-        left: 8px;
-        z-index: 1000;
-        padding: 6px 10px;
-        color: var(--white);
-        background: var(--blue);
-        transform: translateY(-150%);
+        top: 10px;
+        left: 10px;
+        z-index: 100;
+        padding: 9px 12px;
+        color: var(--surface);
+        background: var(--ink);
+        transform: translateY(-160%);
       }
 
       .skip-link:focus {
         transform: translateY(0);
       }
 
-      .desktop {
-        min-height: 100vh;
-        padding: 22px;
-        overflow: hidden;
-      }
-
-      .desktop-shell {
-        position: relative;
-        width: min(1180px, 100%);
+      .shell {
+        width: min(1460px, 100%);
         margin: 0 auto;
+        padding: 0 clamp(20px, 4vw, 64px);
       }
 
-      .window {
-        background: var(--surface);
-        border: 2px solid;
-        border-color: var(--white) var(--black) var(--black) var(--white);
-        box-shadow: var(--raised);
-      }
-
-      .titlebar {
+      .site-header {
+        min-height: 82px;
         display: flex;
         align-items: center;
-        min-height: 28px;
-        margin: 2px;
-        padding: 3px 4px 3px 7px;
-        color: var(--white);
-        background: linear-gradient(90deg, var(--blue), var(--blue-light));
-        font-size: 13px;
+        justify-content: space-between;
+        gap: 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: 19px;
         font-weight: 700;
-        letter-spacing: 0.01em;
+        line-height: 1;
+        text-decoration: none;
       }
 
-      .titlebar-icon {
-        width: 16px;
-        height: 16px;
-        margin-right: 6px;
-        border: 1px solid var(--black);
-        background:
-          linear-gradient(135deg, transparent 42%, var(--blue) 43% 57%, transparent 58%),
-          var(--yellow);
-        box-shadow: inset 1px 1px var(--white);
-      }
-
-      .window-controls {
-        display: flex;
-        gap: 3px;
-        margin-left: auto;
-      }
-
-      .window-control {
+      .wordmark-mark {
+        width: 32px;
+        height: 32px;
         display: grid;
-        width: 20px;
-        height: 18px;
-        padding: 0;
         place-items: center;
-        border: 1px solid;
-        border-color: var(--white) var(--black) var(--black) var(--white);
-        color: var(--black);
-        background: var(--surface);
-        box-shadow: inset 1px 1px var(--surface-light), inset -1px -1px var(--shadow);
-        font: 700 11px/1 Tahoma, sans-serif;
+        color: var(--surface);
+        background: var(--ink);
+        font-family: var(--font-display);
+        font-size: 18px;
       }
 
-      .window-body {
-        padding: 24px;
-      }
-
-      .hero-window {
-        width: min(1080px, 100%);
-        margin: 32px auto 70px;
-      }
-
-      .hero-grid {
+      .wordmark-copy {
         display: grid;
-        grid-template-columns: minmax(0, 1.3fr) minmax(230px, 0.7fr);
-        gap: 30px;
-        align-items: center;
+        gap: 4px;
       }
 
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        margin-bottom: 14px;
-        padding: 4px 7px;
-        border: 1px solid var(--shadow);
-        background: var(--white);
-        box-shadow: var(--sunken);
-        font: 700 11px/1.2 "Courier New", monospace;
+      .wordmark small,
+      .micro-label,
+      .eyebrow,
+      .section-index,
+      .ledger-label,
+      .principle-index,
+      .provider-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
 
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--green);
-        box-shadow: 0 0 0 1px #006a46;
+      .wordmark small {
+        color: var(--muted);
+        font-size: 8px;
+      }
+
+      .site-nav {
+        display: flex;
+        align-items: center;
+        gap: clamp(14px, 2vw, 30px);
+      }
+
+      .site-nav a {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 650;
+        text-decoration: none;
+      }
+
+      .site-nav a:hover {
+        color: var(--signal);
+      }
+
+      .site-nav .nav-cta {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        color: var(--surface);
+        background: var(--ink);
+      }
+
+      .site-nav .nav-cta:hover {
+        color: var(--surface);
+        background: var(--signal);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+        min-height: 690px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(70px, 9vw, 138px) clamp(34px, 6vw, 96px) clamp(70px, 9vw, 130px) 0;
+      }
+
+      .eyebrow {
+        margin: 0 0 30px;
+        color: var(--signal);
       }
 
       h1,
@@ -196,978 +199,962 @@
       }
 
       h1 {
-        max-width: 610px;
-        margin-bottom: 14px;
-        font-family: "Arial Black", Tahoma, sans-serif;
-        font-size: clamp(36px, 6vw, 68px);
-        line-height: 0.94;
-        letter-spacing: -0.055em;
+        max-width: 850px;
+        margin-bottom: 30px;
+        font-family: var(--font-display);
+        font-size: clamp(64px, 8.2vw, 126px);
+        font-weight: 500;
+        letter-spacing: -0.072em;
+        line-height: 0.79;
       }
 
-      h1 span {
+      h1 em {
         display: block;
-        color: var(--blue);
+        color: var(--signal);
+        font-style: normal;
       }
 
-      .hero-copy {
-        max-width: 610px;
-        margin-bottom: 21px;
-        color: var(--text-muted);
-        font-size: 16px;
+      .hero-intro {
+        max-width: 620px;
+        margin-bottom: 34px;
+        color: var(--muted);
+        font-family: var(--font-display);
+        font-size: clamp(19px, 2vw, 26px);
+        line-height: 1.35;
       }
 
-      .button-row {
+      .actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 9px;
       }
 
       .button {
+        min-height: 44px;
         display: inline-flex;
-        min-height: 40px;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 8px 18px;
-        border: 2px solid;
-        border-color: var(--white) var(--black) var(--black) var(--white);
-        color: var(--black);
-        background: var(--surface);
-        box-shadow: var(--raised);
-        font-size: 13px;
+        padding: 9px 17px;
+        border: 1px solid var(--ink);
+        font-size: 11px;
         font-weight: 700;
         text-decoration: none;
       }
 
       .button-primary {
-        outline: 1px solid var(--black);
-        outline-offset: 2px;
+        color: var(--surface);
+        background: var(--ink);
       }
 
       .button:hover {
-        background: var(--surface-light);
+        color: var(--surface);
+        background: var(--signal);
+        border-color: var(--signal);
       }
 
-      .button:active {
-        border-color: var(--black) var(--white) var(--white) var(--black);
-        box-shadow: var(--sunken);
-        transform: translate(1px, 1px);
+      .button-quiet {
+        color: var(--ink);
+        background: transparent;
       }
 
-      .button:focus-visible {
-        outline: 2px dotted var(--black);
-        outline-offset: 3px;
+      .hero-console {
+        min-width: 0;
+        display: grid;
+        align-content: center;
+        padding: clamp(34px, 5vw, 74px);
+        color: var(--surface);
+        background: var(--dark);
       }
 
-      .system-card {
-        min-height: 246px;
-        padding: 12px;
-        border: 2px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        background: #101010;
-        color: #c8ffc8;
-        box-shadow: var(--sunken);
-        font: 12px/1.65 "Courier New", monospace;
-      }
-
-      .system-card strong {
-        color: var(--white);
-      }
-
-      .terminal-line {
+      .console-head {
         display: flex;
-        gap: 9px;
-      }
-
-      .terminal-row {
-        min-height: 19px;
-      }
-
-      .terminal-ok {
-        color: #43ef8b;
-      }
-
-      .terminal-mcp {
-        color: #7cc7ff;
-      }
-
-      .terminal-safe {
-        color: var(--yellow);
-      }
-
-      .terminal-prompt {
-        color: var(--yellow);
-      }
-
-      .terminal-command {
-        margin-top: 15px;
-      }
-
-      .terminal-ready {
-        margin-top: 11px;
-      }
-
-      .section {
-        width: min(1080px, 100%);
-        margin: 0 auto 62px;
-        scroll-margin-top: 22px;
-      }
-
-      .section-heading {
-        display: flex;
-        align-items: end;
+        align-items: center;
         justify-content: space-between;
         gap: 20px;
-        margin-bottom: 14px;
-        color: var(--white);
-        text-shadow: 1px 1px 0 var(--black);
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--dark-line);
       }
 
-      .section-heading h2 {
-        margin-bottom: 0;
-        font: 700 clamp(24px, 4vw, 42px)/1 "Arial Black", Tahoma, sans-serif;
-        letter-spacing: -0.04em;
+      .console-head strong {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 500;
       }
 
-      .section-heading p {
-        max-width: 440px;
-        margin-bottom: 2px;
-        text-align: right;
-      }
-
-      .plane-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 12px;
-      }
-
-      .plane {
-        grid-column: span 2;
-      }
-
-      .plane:nth-child(4),
-      .plane:nth-child(5) {
-        grid-column: span 3;
-      }
-
-      .plane .window-body {
-        min-height: 164px;
-        padding: 17px;
-      }
-
-      .plane-number {
-        display: inline-grid;
-        width: 30px;
-        height: 30px;
-        margin-bottom: 13px;
-        place-items: center;
-        border: 1px solid var(--black);
-        color: var(--white);
-        background: var(--blue);
-        font: 700 14px/1 "Courier New", monospace;
-      }
-
-      .plane h3 {
-        margin-bottom: 6px;
-        font-size: 15px;
-      }
-
-      .plane p {
-        margin-bottom: 0;
-        color: var(--text-muted);
-        font-size: 13px;
-      }
-
-      .pipeline-window .window-body {
-        padding: 20px;
-      }
-
-      .pipeline {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 17px;
-        counter-reset: pipeline;
-      }
-
-      .pipeline-step {
-        position: relative;
-        min-width: 0;
-        padding: 11px 8px;
-        border: 1px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        background: var(--white);
-        box-shadow: var(--sunken);
-        text-align: center;
-        counter-increment: pipeline;
-      }
-
-      .pipeline-step::before {
-        content: counter(pipeline, decimal-leading-zero);
-        display: block;
-        margin-bottom: 5px;
-        color: var(--blue);
-        font: 700 17px/1 "Courier New", monospace;
-      }
-
-      .pipeline-step::after {
-        content: ">";
-        position: absolute;
-        top: 50%;
-        right: -14px;
-        color: var(--blue);
-        font: 700 16px/1 "Courier New", monospace;
-        transform: translateY(-50%);
-      }
-
-      .pipeline-step:last-child::after {
-        content: none;
-      }
-
-      .pipeline-step strong,
-      .pipeline-step small {
-        display: block;
-      }
-
-      .pipeline-step strong {
-        font-size: 12px;
-      }
-
-      .pipeline-step small {
-        margin-top: 2px;
-        color: var(--text-muted);
-        font-size: 10px;
-      }
-
-      .trust-grid {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 14px;
-      }
-
-      .checklist {
-        display: grid;
-        gap: 9px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .checklist li {
-        position: relative;
-        padding: 10px 10px 10px 36px;
-        border: 1px solid var(--shadow);
-        background: var(--white);
-        box-shadow: var(--sunken);
-      }
-
-      .checklist li::before {
-        content: "";
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        width: 11px;
-        height: 11px;
-        border: 1px solid #006a46;
-        background: var(--green);
-        box-shadow: inset 1px 1px rgba(255, 255, 255, 0.55);
-      }
-
-      .approval-dialog {
-        display: grid;
-        min-height: 100%;
-        align-content: center;
-        padding: 16px;
-        border: 2px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        background: var(--surface-light);
-        box-shadow: var(--sunken);
-      }
-
-      .approval-title {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 10px;
-        font-weight: 700;
-      }
-
-      .warning-icon {
-        width: 0;
-        height: 0;
-        border-right: 19px solid transparent;
-        border-bottom: 34px solid var(--yellow);
-        border-left: 19px solid transparent;
-        filter: drop-shadow(1px 1px 0 var(--black));
-      }
-
-      .approval-code {
-        margin: 10px 0 14px;
-        padding: 8px;
-        border: 1px solid var(--shadow);
-        background: var(--white);
-        box-shadow: var(--sunken);
-        font: 12px/1.5 "Courier New", monospace;
-      }
-
-      .approval-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
-      .mini-button {
-        min-width: 76px;
-        padding: 5px 10px;
-        border: 2px solid;
-        border-color: var(--white) var(--black) var(--black) var(--white);
-        background: var(--surface);
-        box-shadow: var(--raised);
-        font: 12px Tahoma, sans-serif;
-      }
-
-      .provider-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 7px;
-      }
-
-      .provider {
+      .live {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        padding: 7px 9px;
-        border: 1px solid;
-        border-color: var(--white) var(--shadow) var(--shadow) var(--white);
-        background: var(--surface-light);
-        box-shadow: 1px 1px 0 var(--black);
-        font-size: 12px;
-        font-weight: 700;
+        gap: 8px;
+        color: #aaa79d;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
-      .provider::before {
+      .live::before {
         content: "";
         width: 7px;
         height: 7px;
-        background: var(--green);
-        box-shadow: 0 0 0 1px #006a46;
+        background: #6ca184;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgb(108 161 132 / 14%);
       }
 
-      .agent-grid {
+      .ledger {
+        margin: 0;
+      }
+
+      .ledger-row {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 16px;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 13px;
+        padding: 19px 0;
+        border-bottom: 1px solid var(--dark-line);
       }
 
-      .agent-card {
+      .ledger-index {
+        color: #75776f;
+        font-family: var(--font-mono);
+        font-size: 9px;
+      }
+
+      .ledger-copy {
         display: grid;
-        min-height: 142px;
-        align-content: start;
-        justify-items: start;
-        padding: 14px;
-        border: 1px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        background: var(--white);
-        box-shadow: var(--sunken);
+        gap: 5px;
       }
 
-      .agent-mark {
+      .ledger-copy strong {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .ledger-copy small {
+        color: #aaa79d;
+        font-size: 10px;
+      }
+
+      .ledger-state {
+        color: #93c2a7;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        text-transform: uppercase;
+      }
+
+      .console-command {
+        margin: 28px 0 0;
+        padding: 17px;
+        color: #dfe8df;
+        background: #171813;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        line-height: 1.7;
+      }
+
+      .console-command b {
+        color: #ff9179;
+        font-weight: 700;
+      }
+
+      .status-rail {
         display: grid;
-        width: 35px;
-        height: 35px;
-        margin-bottom: 11px;
-        place-items: center;
-        border: 1px solid var(--black);
-        color: var(--white);
-        background: var(--blue);
-        box-shadow: 2px 2px 0 var(--shadow);
-        font: 700 14px/1 "Courier New", monospace;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin: 0;
+        padding: 0;
+        background: var(--dark);
+        list-style: none;
       }
 
-      .agent-card:nth-child(2) .agent-mark { background: #111111; }
-      .agent-card:nth-child(3) .agent-mark { background: #c94215; }
-      .agent-card:nth-child(4) .agent-mark { background: #4540a8; }
-
-      .agent-card h3 {
-        margin-bottom: 4px;
-        font-size: 15px;
+      .status-rail li {
+        min-width: 0;
+        display: grid;
+        gap: 8px;
+        padding: 21px clamp(18px, 2.5vw, 34px);
+        color: var(--surface);
+        border-right: 1px solid var(--dark-line);
       }
 
-      .agent-card p {
-        margin-bottom: 0;
-        color: var(--text-muted);
+      .status-rail li:last-child {
+        border-right: 0;
+      }
+
+      .status-rail span {
+        color: #aaa79d;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .status-rail strong {
+        overflow: hidden;
+        font-family: var(--font-display);
+        font-size: 19px;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .status-rail .rail-signal {
+        box-shadow: inset 0 2px var(--signal);
+      }
+
+      .section {
+        padding: clamp(74px, 9vw, 140px) 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+        gap: clamp(34px, 7vw, 110px);
+        align-items: end;
+        margin-bottom: clamp(50px, 7vw, 94px);
+      }
+
+      .section-index {
+        margin: 0 0 20px;
+        color: var(--signal);
+      }
+
+      .section-heading h2,
+      .closing h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(48px, 6.5vw, 92px);
+        font-weight: 500;
+        letter-spacing: -0.065em;
+        line-height: 0.86;
+      }
+
+      .section-heading > p {
+        margin: 0;
+        color: var(--muted);
+        font-family: var(--font-display);
+        font-size: clamp(17px, 1.7vw, 23px);
+        line-height: 1.45;
+      }
+
+      .principle-list {
+        border-top: 1px solid var(--line);
+      }
+
+      .principle {
+        display: grid;
+        grid-template-columns: 54px minmax(190px, 0.7fr) minmax(260px, 1.3fr) auto;
+        gap: clamp(16px, 3vw, 46px);
+        align-items: center;
+        min-height: 116px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .principle-index {
+        color: #aaa69d;
+      }
+
+      .principle h3 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(23px, 2.4vw, 34px);
+        font-weight: 500;
+        letter-spacing: -0.035em;
+      }
+
+      .principle p {
+        margin: 0;
+        color: var(--muted);
         font-size: 12px;
+        line-height: 1.6;
       }
 
-      .mcp-path {
+      .principle-tag {
+        color: var(--success);
+        font-family: var(--font-mono);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .workflow {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 18px;
-        padding: 13px;
-        border: 2px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        background: var(--surface-light);
-        box-shadow: var(--sunken);
-        counter-reset: pairing;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
       }
 
-      .mcp-step {
-        position: relative;
-        padding-left: 30px;
-        counter-increment: pairing;
+      .workflow-step {
+        min-height: 170px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+        background: var(--surface);
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .workflow-step span {
+        color: var(--signal);
+        font-family: var(--font-mono);
+        font-size: 9px;
+      }
+
+      .workflow-step strong {
+        font-family: var(--font-display);
+        font-size: 19px;
+        font-weight: 500;
+      }
+
+      .workflow-step small {
+        color: var(--muted);
+        font-size: 9px;
+        line-height: 1.45;
+      }
+
+      .workflow-step-dark {
+        color: var(--surface);
+        background: var(--dark);
+        border-color: var(--dark-line);
+      }
+
+      .workflow-step-dark small {
+        color: #aaa79d;
+      }
+
+      .evidence-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+        border: 1px solid var(--line);
+      }
+
+      .incident {
+        padding: clamp(28px, 5vw, 68px);
+        background: var(--surface);
+      }
+
+      .incident h3,
+      .trust-panel h3,
+      .provider-panel h3 {
+        margin: 12px 0 26px;
+        font-family: var(--font-display);
+        font-size: clamp(32px, 4vw, 54px);
+        font-weight: 500;
+        letter-spacing: -0.05em;
+        line-height: 0.98;
+      }
+
+      .incident-log {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--line);
+      }
+
+      .incident-log li {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        min-height: 64px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .incident-log span,
+      .incident-log small {
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 8px;
+      }
+
+      .incident-log strong {
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 500;
+      }
+
+      .incident-log .attention {
+        color: var(--signal);
+      }
+
+      .trust-panel {
+        padding: clamp(28px, 5vw, 62px);
+        color: var(--surface);
+        background: var(--dark);
+      }
+
+      .trust-panel p {
+        color: #aaa79d;
         font-size: 12px;
+        line-height: 1.7;
       }
 
-      .mcp-step::before {
-        content: counter(pairing);
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: grid;
-        width: 22px;
-        height: 22px;
-        place-items: center;
-        border: 1px solid var(--black);
-        color: var(--white);
-        background: var(--blue);
-        font: 700 11px/1 "Courier New", monospace;
+      .approval {
+        margin-top: 38px;
+        padding: 18px;
+        color: var(--ink);
+        background: var(--canvas);
+        border-left: 3px solid var(--signal);
       }
 
-      .mcp-step::after {
-        content: ">";
-        position: absolute;
-        top: 2px;
-        right: -14px;
-        color: var(--blue);
-        font: 700 15px/1 "Courier New", monospace;
-      }
-
-      .mcp-step:last-child::after {
-        content: none;
-      }
-
-      .mcp-step strong,
-      .mcp-step span {
+      .approval strong,
+      .approval span {
         display: block;
       }
 
-      .mcp-step span {
-        margin-top: 2px;
-        color: var(--text-muted);
-      }
-
-      .github-window .window-body {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 26px;
-        align-items: center;
-        padding: 22px 24px;
-      }
-
-      .github-copy {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 17px;
-        align-items: center;
-      }
-
-      .github-mark {
-        display: grid;
-        width: 58px;
-        height: 58px;
-        place-items: center;
-        border: 2px solid;
-        border-color: var(--shadow) var(--white) var(--white) var(--shadow);
-        color: var(--white);
-        background: #111111;
-        box-shadow: var(--sunken);
-      }
-
-      .github-mark svg {
-        width: 35px;
-        height: 35px;
-        fill: currentColor;
-      }
-
-      .github-copy h2 {
-        margin-bottom: 4px;
-        font-size: clamp(21px, 3vw, 31px);
-        line-height: 1.05;
-        letter-spacing: -0.025em;
-      }
-
-      .github-copy p {
-        margin-bottom: 0;
-        color: var(--text-muted);
-      }
-
-      .github-actions {
-        display: flex;
-        gap: 10px;
-      }
-
-      .star-button {
-        color: var(--white);
-        background: var(--blue);
-        text-shadow: 1px 1px var(--black);
-      }
-
-      .star-button:hover {
-        background: #1717a4;
-      }
-
-      .star-icon {
-        width: 17px;
-        height: 17px;
-        fill: var(--yellow);
-        stroke: var(--black);
-        stroke-width: 1.2;
-      }
-
-      .final-window {
-        text-align: center;
-      }
-
-      .final-window .window-body {
-        padding: 34px 20px;
-      }
-
-      .final-window h2 {
+      .approval strong {
         margin-bottom: 8px;
-        font: 700 clamp(28px, 5vw, 48px)/1 "Arial Black", Tahoma, sans-serif;
-        letter-spacing: -0.04em;
+        font-family: var(--font-display);
+        font-size: 18px;
       }
 
-      .final-window p {
-        margin-bottom: 20px;
-        color: var(--text-muted);
+      .approval span {
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 9px;
+        line-height: 1.6;
       }
 
-      .final-window .button-row {
-        justify-content: center;
+      .provider-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.55fr) minmax(0, 1.45fr);
+        gap: 1px;
+        background: var(--line);
+        border: 1px solid var(--line);
       }
 
-      @media (max-width: 900px) {
-        .desktop {
-          padding: 14px;
-        }
+      .provider-panel {
+        padding: clamp(30px, 5vw, 64px);
+        background: var(--surface);
+      }
 
-        .hero-window,
-        .section {
-          width: 100%;
-        }
+      .provider-panel-dark {
+        color: var(--surface);
+        background: var(--dark);
+      }
 
-        .hero-window {
-          margin-top: 14px;
-          margin-bottom: 48px;
-        }
+      .provider-panel-dark p {
+        color: #aaa79d;
+      }
 
-        .hero-grid,
-        .trust-grid,
-        .github-window .window-body {
+      .provider-panel p {
+        max-width: 540px;
+        margin-bottom: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .provider-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
+      }
+
+      .provider-list li {
+        min-height: 74px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 16px;
+        background: var(--surface);
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        font-family: var(--font-display);
+        font-size: 16px;
+      }
+
+      .provider-list li::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        background: var(--success);
+        border-radius: 50%;
+      }
+
+      .security-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-top: 1px solid var(--line);
+      }
+
+      .security-item {
+        min-height: 180px;
+        display: grid;
+        align-content: end;
+        gap: 11px;
+        padding: clamp(24px, 4vw, 48px);
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .security-item:nth-child(even) {
+        border-right: 0;
+      }
+
+      .security-item span {
+        color: var(--signal);
+        font-family: var(--font-mono);
+        font-size: 9px;
+      }
+
+      .security-item strong {
+        font-family: var(--font-display);
+        font-size: clamp(22px, 2.8vw, 36px);
+        font-weight: 500;
+        letter-spacing: -0.035em;
+      }
+
+      .security-item p {
+        max-width: 570px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .closing {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+        gap: clamp(42px, 8vw, 130px);
+        align-items: end;
+        padding: clamp(84px, 11vw, 170px) 0;
+      }
+
+      .closing h2 em {
+        display: block;
+        color: var(--signal);
+        font-style: normal;
+      }
+
+      .closing-copy p {
+        margin-bottom: 28px;
+        color: var(--muted);
+        font-family: var(--font-display);
+        font-size: 20px;
+        line-height: 1.45;
+      }
+
+      .site-footer {
+        min-height: 92px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        color: var(--muted);
+        border-top: 1px solid var(--line);
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .site-footer a {
+        text-decoration: none;
+      }
+
+      .site-footer a:hover {
+        color: var(--signal);
+      }
+
+      @media (max-width: 1040px) {
+        .hero {
           grid-template-columns: 1fr;
-        }
-
-        .github-actions {
-          justify-content: flex-start;
-        }
-
-        .plane-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .plane,
-        .plane:nth-child(4),
-        .plane:nth-child(5) {
-          grid-column: span 1;
-        }
-
-        .plane:last-child {
-          grid-column: 1 / -1;
-        }
-
-        .pipeline {
-          grid-template-columns: repeat(4, 1fr);
-        }
-
-        .agent-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .pipeline-step:nth-child(4)::after {
-          content: none;
-        }
-      }
-
-      @media (max-width: 620px) {
-        body {
-          font-size: 13px;
-        }
-
-        .window-body {
-          padding: 17px;
-        }
-
-        h1 {
-          font-size: clamp(34px, 13vw, 54px);
         }
 
         .hero-copy {
-          font-size: 14px;
+          min-height: 630px;
+          padding-right: 0;
         }
 
-        .section {
-          margin-bottom: 44px;
+        .hero-console {
+          min-height: 520px;
+        }
+
+        .workflow {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .evidence-grid,
+        .closing {
+          grid-template-columns: 1fr;
+        }
+
+        .provider-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          padding: 0 18px;
+        }
+
+        .site-header {
+          min-height: 70px;
+        }
+
+        .site-nav a:not(.nav-cta) {
+          display: none;
+        }
+
+        .hero-copy {
+          min-height: auto;
+          padding: 82px 0;
+        }
+
+        h1 {
+          font-size: clamp(54px, 18vw, 86px);
+        }
+
+        .hero-console {
+          min-height: auto;
+          padding: 34px 24px;
+        }
+
+        .status-rail,
+        .section-heading,
+        .provider-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .status-rail li {
+          border-right: 0;
+          border-bottom: 1px solid var(--dark-line);
+        }
+
+        .status-rail li:last-child {
+          border-bottom: 0;
         }
 
         .section-heading {
-          display: block;
+          align-items: start;
         }
 
-        .section-heading p {
-          margin-top: 8px;
-          text-align: left;
+        .principle {
+          grid-template-columns: 36px minmax(0, 1fr) auto;
+          padding: 22px 0;
         }
 
-        .plane-grid,
-        .pipeline {
+        .principle p {
+          grid-column: 2 / -1;
+        }
+
+        .workflow {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .workflow-step {
+          min-height: 145px;
+        }
+
+        .provider-list,
+        .security-grid {
           grid-template-columns: 1fr;
         }
 
-        .agent-grid,
-        .mcp-path {
-          grid-template-columns: 1fr;
+        .security-item,
+        .security-item:nth-child(even) {
+          border-right: 0;
         }
 
-        .mcp-step::after {
-          content: "v";
-          top: auto;
-          right: 50%;
-          bottom: -16px;
-          transform: translateX(50%);
+        .site-footer {
+          align-items: flex-start;
+          flex-direction: column;
+          justify-content: center;
         }
+      }
 
-        .mcp-step:last-child::after {
-          content: none;
-        }
-
-        .plane:last-child {
-          grid-column: auto;
-        }
-
-        .pipeline-step::after,
-        .pipeline-step:nth-child(4)::after {
-          content: "v";
-          top: auto;
-          right: 50%;
-          bottom: -17px;
-          transform: translateX(50%);
-        }
-
-        .pipeline-step:last-child::after {
-          content: none;
-        }
-
-        .button-row {
-          display: grid;
-        }
-
-        .github-copy {
-          grid-template-columns: 1fr;
-        }
-
-        .github-actions {
-          display: grid;
+      @media (max-width: 450px) {
+        .wordmark-copy {
+          display: none;
         }
 
         .button {
           width: 100%;
         }
 
+        .ledger-row {
+          grid-template-columns: 26px minmax(0, 1fr);
+        }
+
+        .ledger-state {
+          grid-column: 2;
+        }
+
+        .workflow {
+          grid-template-columns: 1fr;
+        }
+
+        .principle {
+          grid-template-columns: 30px minmax(0, 1fr);
+        }
+
+        .principle-tag {
+          grid-column: 2;
+        }
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
     </style>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <main class="desktop" id="main">
-      <div class="desktop-shell">
-        <section class="window hero-window" aria-labelledby="hero-title">
-          <div class="titlebar">
-            <span class="titlebar-icon" aria-hidden="true"></span>
-            Homelab Console - Welcome
-            <span class="window-controls" aria-hidden="true">
-              <span class="window-control">_</span>
-              <span class="window-control">□</span>
-              <span class="window-control">x</span>
-            </span>
+    <div class="shell">
+      <header class="site-header">
+        <a class="wordmark" href="./" aria-label="Homelab Console home">
+          <span class="wordmark-mark" aria-hidden="true">H</span>
+          <span class="wordmark-copy">Homelab <small>private operations</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="#how-it-works">How it works</a>
+          <a href="#security">Security</a>
+          <a href="https://github.com/imdelmare/homelab-console" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="nav-cta" href="./docs/getting-started">Start locally</a>
+        </nav>
+      </header>
+
+      <main id="main">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <p class="eyebrow">Local-first homelab control plane</p>
+            <h1 id="hero-title">A quiet place for the things that need <em>attention.</em></h1>
+            <p class="hero-intro">
+              Give a small local AI typed tools, bounded context, and one governed path to your
+              infrastructure. The model reasons. Homelab Console keeps authority.
+            </p>
+            <div class="actions">
+              <a class="button button-primary" href="./docs/getting-started">Run locally</a>
+              <a class="button button-quiet" href="./docs/product-tour">View product tour</a>
+            </div>
           </div>
-          <div class="window-body hero-grid">
+
+          <aside class="hero-console" aria-label="Illustrative control-plane status">
+            <div class="console-head">
+              <strong>Operations ledger</strong>
+              <span class="live">Control plane online</span>
+            </div>
+            <div class="ledger">
+              <div class="ledger-row">
+                <span class="ledger-index">01</span>
+                <span class="ledger-copy"><strong>Bounded context</strong><small>Only relevant state reaches the model</small></span>
+                <span class="ledger-state">ready</span>
+              </div>
+              <div class="ledger-row">
+                <span class="ledger-index">02</span>
+                <span class="ledger-copy"><strong>Typed tools</strong><small>No arbitrary shell, URL, or raw API</small></span>
+                <span class="ledger-state">verified</span>
+              </div>
+              <div class="ledger-row">
+                <span class="ledger-index">03</span>
+                <span class="ledger-copy"><strong>Human authority</strong><small>Every infrastructure write stops for consent</small></span>
+                <span class="ledger-state">required</span>
+              </div>
+              <div class="ledger-row">
+                <span class="ledger-index">04</span>
+                <span class="ledger-copy"><strong>Audit trail</strong><small>Evidence survives the conversation</small></span>
+                <span class="ledger-state">recording</span>
+              </div>
+            </div>
+            <p class="console-command"><b>LOCAL-AI ›</b> diagnose home assistant<br />HC › evidence collected · no cloud API used</p>
+          </aside>
+        </section>
+
+        <ul class="status-rail" aria-label="Core product properties">
+          <li><span>Reasoning</span><strong>Local by default</strong></li>
+          <li><span>Interface</span><strong>Strictly typed</strong></li>
+          <li class="rail-signal"><span>Writes</span><strong>Human approved</strong></li>
+          <li><span>Evidence</span><strong>Durably audited</strong></li>
+        </ul>
+
+        <section class="section" id="how-it-works" aria-labelledby="principles-title">
+          <div class="section-heading">
             <div>
-              <div class="eyebrow"><span class="status-dot"></span> Local-first homelab control plane</div>
-              <h1 id="hero-title">Run your homelab with a small local AI.<span>Privately.</span></h1>
-              <p class="hero-copy">
-                Homelab Console gives lightweight models the structured tools and bounded context
-                they need to understand, diagnose, and safely operate your infrastructure. Run
-                locally without sending homelab data to OpenAI or Anthropic.
-              </p>
-              <div class="button-row">
-                <a class="button button-primary" href="./docs/getting-started">Run locally</a>
-                <a class="button" href="#small-models">See how it works</a>
-                <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">GitHub</a>
-              </div>
+              <p class="section-index">01 / Better tools</p>
+              <h2 id="principles-title">Make the problem smaller.</h2>
             </div>
-            <div class="system-card" aria-hidden="true">
-              <strong>SMALL LOCAL MODEL</strong><br />
-              Gemma / Qwen / Llama
-              <div class="terminal-prompt terminal-command terminal-row">
-                C:\LOCAL-AI&gt; diagnose home assistant
-              </div>
-              <div class="terminal-line terminal-row"><span class="terminal-mcp">[HC]</span><span>bounded context loaded</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>typed tool selected</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-mcp">[HC]</span><span>provider state normalized</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>diagnosis validated</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-safe">[SAFE]</span><span>writes require approval</span></div>
-              <div class="terminal-prompt terminal-ready terminal-row">C:\LOCAL-AI&gt; cloud APIs used: none</div>
-            </div>
-            <p class="sr-only">
-              A small local model receives bounded context, selects a typed tool, reads normalized
-              provider state, and produces a validated diagnosis. No cloud AI API is used.
+            <p>
+              A lightweight model does not need more privileges. It needs predictable choices,
+              compact evidence, and boundaries it cannot negotiate away.
             </p>
           </div>
-        </section>
 
-        <section class="section" id="small-models" aria-labelledby="small-models-title">
-          <div class="section-heading">
-            <h2 id="small-models-title">Small models need better tools.</h2>
-            <p>Not more parameters. Not more privileges. A smaller problem with predictable boundaries.</p>
-          </div>
-          <div class="plane-grid">
-            <article class="window plane">
-              <div class="titlebar">Typed Tools</div>
-              <div class="window-body">
-                <span class="plane-number">01</span>
-                <h3>Predictable choices</h3>
-                <p>Named capabilities and strict schemas replace arbitrary commands, URLs, and raw APIs.</p>
-              </div>
+          <div class="principle-list">
+            <article class="principle">
+              <span class="principle-index">01</span>
+              <h3>Typed tools</h3>
+              <p>Named capabilities and strict schemas replace arbitrary commands, URLs, and provider APIs.</p>
+              <span class="principle-tag">bounded</span>
             </article>
-            <article class="window plane">
-              <div class="titlebar">Bounded Context</div>
-              <div class="window-body">
-                <span class="plane-number">02</span>
-                <h3>Only what matters</h3>
-                <p>Compact summaries and task evidence reduce the context a lightweight model must reason over.</p>
-              </div>
+            <article class="principle">
+              <span class="principle-index">02</span>
+              <h3>Bounded context</h3>
+              <p>Compact summaries and persistent task evidence reduce the context a small model must reason over.</p>
+              <span class="principle-tag">compact</span>
             </article>
-            <article class="window plane">
-              <div class="titlebar">Validation</div>
-              <div class="window-body">
-                <span class="plane-number">03</span>
-                <h3>Untrusted output</h3>
-                <p>Every model decision is schema-checked before it can reach a tool or mutate task state.</p>
-              </div>
+            <article class="principle">
+              <span class="principle-index">03</span>
+              <h3>Validated decisions</h3>
+              <p>Model output remains untrusted until the control plane checks its structure and policy.</p>
+              <span class="principle-tag">checked</span>
             </article>
-            <article class="window plane">
-              <div class="titlebar">Persistent Tasks</div>
-              <div class="window-body">
-                <span class="plane-number">04</span>
-                <h3>Reasoning that survives chat</h3>
-                <p>Findings, checks, ownership, and history remain canonical outside the model conversation.</p>
-              </div>
+            <article class="principle">
+              <span class="principle-index">04</span>
+              <h3>Persistent tasks</h3>
+              <p>Findings, checks, ownership, and history remain canonical outside the chat window.</p>
+              <span class="principle-tag">durable</span>
             </article>
-            <article class="window plane">
-              <div class="titlebar">Human Authority</div>
-              <div class="window-body">
-                <span class="plane-number">05</span>
-                <h3>Safe remediation</h3>
-                <p>Models can request exact actions. Only the operator can approve an infrastructure write.</p>
-              </div>
+            <article class="principle">
+              <span class="principle-index">05</span>
+              <h3>Human authority</h3>
+              <p>Agents can request one exact write. Only the operator can approve that invocation.</p>
+              <span class="principle-tag">sovereign</span>
             </article>
-          </div>
-        </section>
-
-        <section class="section" aria-labelledby="pipeline-title">
-          <div class="section-heading">
-            <h2 id="pipeline-title">Local reasoning. Governed execution.</h2>
-            <p>The model is replaceable. Infrastructure knowledge, state, policy, and authority stay in Homelab Console.</p>
-          </div>
-          <div class="window pipeline-window">
-            <div class="titlebar">Small model → Homelab Console → Homelab</div>
-            <div class="window-body pipeline">
-              <div class="pipeline-step"><strong>Ask</strong><small>operator intent</small></div>
-              <div class="pipeline-step"><strong>Context</strong><small>bounded state</small></div>
-              <div class="pipeline-step"><strong>Reason</strong><small>local model</small></div>
-              <div class="pipeline-step"><strong>Validate</strong><small>typed decision</small></div>
-              <div class="pipeline-step"><strong>Execute</strong><small>shared core</small></div>
-              <div class="pipeline-step"><strong>Approve</strong><small>writes only</small></div>
-              <div class="pipeline-step"><strong>Record</strong><small>task + audit</small></div>
-            </div>
           </div>
         </section>
 
         <section class="section" aria-labelledby="workflow-title">
           <div class="section-heading">
-            <h2 id="workflow-title">A diagnosis, not a science project.</h2>
-            <p>An illustrative governed workflow for a common homelab failure.</p>
-          </div>
-          <div class="window">
-            <div class="titlebar">Incident - Home Assistant stopped responding</div>
-            <div class="window-body trust-grid">
-              <ol class="checklist">
-                <li><strong>Ask locally.</strong> “Why is Home Assistant down?”</li>
-                <li><strong>Collect evidence.</strong> A typed status tool reports the service unreachable.</li>
-                <li><strong>Follow the dependency.</strong> Proxmox reports the declared LXC is stopped.</li>
-                <li><strong>Propose, never assume.</strong> The reasoning layer identifies one exact start operation; a governed client requests it.</li>
-                <li><strong>Verify.</strong> After operator approval, the console starts the LXC and checks health again.</li>
-              </ol>
-              <div class="approval-dialog" aria-label="Illustrative local AI workflow properties">
-                <div class="approval-title">
-                  <span class="status-dot" aria-hidden="true"></span>
-                  Local-first by design
-                </div>
-                <div class="approval-code">reasoning: local model<br />cloud AI required: no<br />credentials exposed to model: none<br />write authority: operator only</div>
-                <p>The model reasons. Homelab Console owns infrastructure access, validation, approval, and read-back.</p>
-              </div>
+            <div>
+              <p class="section-index">02 / Governed execution</p>
+              <h2 id="workflow-title">One path from intent to evidence.</h2>
             </div>
+            <p>
+              Local reasoning, MCP clients, Telegram, and REST converge on the same validation,
+              approval, redaction, and audit core.
+            </p>
+          </div>
+
+          <div class="workflow" aria-label="Governed execution workflow">
+            <div class="workflow-step"><span>01</span><strong>Ask</strong><small>Operator intent</small></div>
+            <div class="workflow-step"><span>02</span><strong>Context</strong><small>Bounded state</small></div>
+            <div class="workflow-step"><span>03</span><strong>Reason</strong><small>Local model</small></div>
+            <div class="workflow-step"><span>04</span><strong>Validate</strong><small>Typed decision</small></div>
+            <div class="workflow-step workflow-step-dark"><span>05</span><strong>Execute</strong><small>Shared core</small></div>
+            <div class="workflow-step workflow-step-dark"><span>06</span><strong>Approve</strong><small>Writes only</small></div>
+            <div class="workflow-step workflow-step-dark"><span>07</span><strong>Record</strong><small>Task and audit</small></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="evidence-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-index">03 / Operational evidence</p>
+              <h2 id="evidence-title">A diagnosis, not a science project.</h2>
+            </div>
+            <p>
+              Follow a common failure through structured observations, one exact proposal, and a
+              verified result.
+            </p>
+          </div>
+
+          <div class="evidence-grid">
+            <article class="incident">
+              <p class="micro-label">Incident / Home Assistant unavailable</p>
+              <h3>Evidence narrows the next move.</h3>
+              <ol class="incident-log">
+                <li><span>01</span><strong>Ask locally</strong><small>operator intent</small></li>
+                <li><span>02</span><strong>Read normalized service state</strong><small>typed tool</small></li>
+                <li><span>03</span><strong>Follow the declared dependency</strong><small>Proxmox</small></li>
+                <li><span>04</span><strong>Propose one exact start operation</strong><small class="attention">approval</small></li>
+                <li><span>05</span><strong>Read back health after execution</strong><small>verified</small></li>
+              </ol>
+            </article>
+            <aside class="trust-panel">
+              <p class="micro-label">Authority boundary</p>
+              <h3>The model reasons. The operator decides.</h3>
+              <p>
+                Provider credentials, infrastructure state, policy, and write authority remain in
+                Homelab Console. The reasoning runtime stays replaceable.
+              </p>
+              <div class="approval">
+                <strong>Operator approval required</strong>
+                <span>tool: proxmox.lxc.start</span>
+                <span>target: inventory-validated</span>
+                <span>approval: input-bound · single-use</span>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="providers-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-index">04 / Normalized systems</p>
+              <h2 id="providers-title">Your stack, one vocabulary.</h2>
+            </div>
+            <p>
+              Different products and protocols become predictable observations that a smaller
+              model can understand safely.
+            </p>
+          </div>
+
+          <div class="provider-layout">
+            <article class="provider-panel provider-panel-dark">
+              <p class="provider-label">Provider plane</p>
+              <h3>Raw APIs stay behind the boundary.</h3>
+              <p>Adapters normalize provider-specific details before anything reaches a model or external client.</p>
+            </article>
+            <ul class="provider-list" aria-label="Supported providers">
+              <li>Proxmox VE</li><li>Proxmox Backup</li><li>OPNsense</li>
+              <li>MikroTik</li><li>FritzBox</li><li>Home Assistant</li>
+              <li>Frigate</li><li>AdGuard Home</li><li>Nextcloud</li>
+              <li>NUT UPS</li><li>Uptime Kuma</li><li>Cloudflare</li>
+            </ul>
           </div>
         </section>
 
         <section class="section" id="security" aria-labelledby="security-title">
           <div class="section-heading">
-            <h2 id="security-title">Small, imperfect, safely constrained.</h2>
-            <p>Local models can be useful because they never receive direct infrastructure authority.</p>
-          </div>
-          <div class="window">
-            <div class="titlebar">Security Properties</div>
-            <div class="window-body trust-grid">
-              <ul class="checklist">
-                <li><strong>No generic remote execution.</strong> No arbitrary shell or SSH capability.</li>
-                <li><strong>No raw provider access.</strong> Every endpoint and target is bounded.</li>
-                <li><strong>Single-use approvals.</strong> Write consent is input-bound and expires.</li>
-                <li><strong>Central redaction.</strong> Sensitive output is stripped before it leaves the core.</li>
-                <li><strong>Structured evidence.</strong> Invocations, outcomes, and task history remain auditable.</li>
-              </ul>
-              <div class="approval-dialog" aria-label="Example operator approval dialog">
-                <div class="approval-title">
-                  <span class="warning-icon" aria-hidden="true"></span>
-                  Operator approval required
-                </div>
-                <p>An authenticated agent requested one exact write invocation.</p>
-                <div class="approval-code">tool: proxmox.lxc.start<br />target: inventory-validated<br />approval: single-use</div>
-                <div class="approval-actions" aria-hidden="true">
-                  <button class="mini-button" type="button" tabindex="-1">Deny</button>
-                  <button class="mini-button" type="button" tabindex="-1">Approve</button>
-                </div>
-              </div>
+            <div>
+              <p class="section-index">05 / Trust model</p>
+              <h2 id="security-title">Small, imperfect, safely constrained.</h2>
             </div>
+            <p>
+              Useful local models do not need direct infrastructure authority. Safety comes from
+              the control plane around them.
+            </p>
+          </div>
+
+          <div class="security-grid">
+            <article class="security-item"><span>01</span><strong>No generic remote execution</strong><p>No arbitrary shell, SSH, caller-selected URL, or raw provider forwarding.</p></article>
+            <article class="security-item"><span>02</span><strong>Single-use approvals</strong><p>Infrastructure writes are narrow, exact, input-bound, and decided by the operator.</p></article>
+            <article class="security-item"><span>03</span><strong>Central redaction</strong><p>Sensitive data is stripped before observations leave the execution core.</p></article>
+            <article class="security-item"><span>04</span><strong>Structured evidence</strong><p>Invocations, outcomes, findings, and task history remain reviewable after the chat ends.</p></article>
           </div>
         </section>
 
-        <section class="section" id="providers" aria-labelledby="providers-title">
-          <div class="section-heading">
-            <h2 id="providers-title">Your stack, normalized.</h2>
-            <p>Different protocols and products become predictable, typed observations.</p>
+        <section class="closing" aria-labelledby="closing-title">
+          <div>
+            <p class="section-index">Ready / Local-first operations</p>
+            <h2 id="closing-title">Make a smaller model useful. <em>Keep your homelab private.</em></h2>
           </div>
-          <div class="window">
-            <div class="titlebar">Provider Connections</div>
-            <div class="window-body provider-list">
-              <span class="provider">Proxmox VE</span>
-              <span class="provider">Proxmox Backup Server</span>
-              <span class="provider">OPNsense</span>
-              <span class="provider">MikroTik</span>
-              <span class="provider">FritzBox</span>
-              <span class="provider">Home Assistant</span>
-              <span class="provider">Frigate</span>
-              <span class="provider">AdGuard Home</span>
-              <span class="provider">Nextcloud</span>
-              <span class="provider">NUT UPS</span>
-              <span class="provider">Asterisk</span>
-              <span class="provider">Uptime Kuma</span>
-              <span class="provider">EMQX</span>
-              <span class="provider">Cloudflare Tunnels</span>
-              <span class="provider">ZeroTier</span>
+          <div class="closing-copy">
+            <p>Run the control plane locally, connect one provider, and choose the reasoning runtime that fits your hardware.</p>
+            <div class="actions">
+              <a class="button button-primary" href="./docs/getting-started">Start locally</a>
+              <a class="button button-quiet" href="https://github.com/imdelmare/homelab-console" target="_blank" rel="noopener noreferrer">View source</a>
             </div>
           </div>
         </section>
+      </main>
 
-        <section class="section" id="agents" aria-labelledby="agents-title">
-          <div class="section-heading">
-            <h2 id="agents-title">Local first. Cloud optional.</h2>
-            <p>Choose the reasoning runtime without changing the infrastructure control plane.</p>
-          </div>
-          <div class="window">
-            <div class="titlebar">Replaceable Reasoning</div>
-            <div class="window-body">
-              <div class="agent-grid">
-                <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">OL</span>
-                  <h3>Ollama</h3>
-                  <p>Use the built-in fixed-endpoint adapter for private, read-oriented conversation and bounded operations reasoning.</p>
-                </article>
-                <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">LC</span>
-                  <h3>llama.cpp</h3>
-                  <p>Run an OpenAI-compatible model server on a declared private host with an inventory-bound endpoint.</p>
-                </article>
-                <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">LA</span>
-                  <h3>More local runtimes</h3>
-                  <p>LM Studio and vLLM compatibility is on the validation roadmap; tested support will be published with evidence.</p>
-                </article>
-                <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">MCP</span>
-                  <h3>External agents</h3>
-                  <p>Claude, Codex, OpenCode, and Cline remain optional clients of the same governed MCP surface.</p>
-                </article>
-              </div>
-              <div class="mcp-path" aria-label="Shared control-plane interfaces">
-                <div class="mcp-step"><strong>Local model</strong><span>Reason over bounded context</span></div>
-                <div class="mcp-step"><strong>MCP clients</strong><span>Use authenticated typed tools</span></div>
-                <div class="mcp-step"><strong>Telegram + REST</strong><span>Reach the same policies</span></div>
-                <div class="mcp-step"><strong>execute_tool()</strong><span>Validate, redact, audit</span></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section window github-window" aria-labelledby="github-title">
-          <div class="titlebar">GitHub - homelab-mcp</div>
-          <div class="window-body">
-            <div class="github-copy">
-              <span class="github-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 .7a11.5 11.5 0 00-3.64 22.4c.58.1.79-.25.79-.56v-2.23c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.74-1.55-2.58-.29-5.29-1.29-5.29-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.94 10.94 0 015.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.76.12 3.05.74.8 1.18 1.83 1.18 3.09 0 4.41-2.72 5.39-5.3 5.68.42.36.79 1.06.79 2.14v3.27c0 .31.21.67.8.56A11.5 11.5 0 0012 .7z" />
-                </svg>
-              </span>
-              <div>
-                <h2 id="github-title">Free project. Available on GitHub.</h2>
-                <p>Explore the source on GitHub, run it in your own lab, and leave a star if the project helps you.</p>
-              </div>
-            </div>
-            <div class="github-actions">
-              <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">View source</a>
-              <a class="button star-button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">
-                <svg class="star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.4 2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.21l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94z" /></svg>
-                Star on GitHub
-              </a>
-            </div>
-          </div>
-        </section>
-
-        <section class="section window final-window" aria-labelledby="final-title">
-          <div class="titlebar">Homelab Console - Ready</div>
-          <div class="window-body">
-            <h2 id="final-title">Make a smaller model useful.<br />Keep your homelab private.</h2>
-            <p>Run the control plane locally, connect your infrastructure, and choose the reasoning runtime that fits your hardware.</p>
-            <div class="button-row">
-              <a class="button" href="./docs/getting-started">Start locally</a>
-              <a class="button button-primary" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">Get Homelab Console on GitHub</a>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
-
+      <footer class="site-footer">
+        <span>Homelab Console / Local reasoning · typed tools · human authority</span>
+        <span><a href="./docs/">Field manual</a> · <a href="https://github.com/imdelmare/homelab-console" target="_blank" rel="noopener noreferrer">GitHub</a></span>
+      </footer>
+    </div>
   </body>
 </html>
