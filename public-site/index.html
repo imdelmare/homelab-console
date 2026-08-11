@@ -106,17 +106,6 @@
         text-decoration: none;
       }
 
-      .wordmark-mark {
-        width: 32px;
-        height: 32px;
-        display: grid;
-        place-items: center;
-        color: var(--surface);
-        background: var(--ink);
-        font-family: var(--font-display);
-        font-size: 18px;
-      }
-
       .wordmark-copy {
         display: grid;
         gap: 4px;
@@ -873,7 +862,7 @@
       }
 
       @media (max-width: 450px) {
-        .wordmark-copy {
+        .wordmark small {
           display: none;
         }
 
@@ -915,7 +904,6 @@
     <div class="shell">
       <header class="site-header">
         <a class="wordmark" href="./" aria-label="Homelab Console home">
-          <span class="wordmark-mark" aria-hidden="true">H</span>
           <span class="wordmark-copy">Homelab <small>private operations</small></span>
         </a>
         <nav class="site-nav" aria-label="Primary navigation">
