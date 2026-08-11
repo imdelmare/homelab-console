@@ -38,7 +38,7 @@ run_api_pytest() {
 }
 
 run_web_build() {
-  (cd "$WEB_DIR" && npm run build)
+  (cd "$WEB_DIR" && npm run lint && npm test && npm run build)
 }
 
 usage() {

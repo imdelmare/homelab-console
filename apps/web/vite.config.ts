@@ -1,4 +1,3 @@
-import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 declare const process: { env: Record<string, string | undefined> };
@@ -9,7 +8,6 @@ const apiPort = process.env.API_PORT || process.env.APP_PORT || "8000";
 const apiTarget = `http://${proxyHost}:${apiPort}`;
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
   define: {
     "process.env.NODE_ENV": JSON.stringify(mode === "production" ? "production" : "development"),
   },

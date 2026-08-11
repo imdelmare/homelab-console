@@ -15,15 +15,16 @@ paths; cloud inference is optional.
 ## See the workflow first
 
 Start with the [Product Tour](./product-tour.md) to follow one synthetic incident
-from the control room to task evidence, operator approval, and audit. It is the
+from Inbox to incident response, task evidence, operator approval, and Activity. It is the
 fastest way to understand what the system does before reading implementation or
 deployment details.
 
 The first useful local-first path in a configured console is:
 
 ```text
-Open Overview
-  → inspect one provider observation
+Open Inbox
+  → inspect an Incident or unhealthy System
+  → review its capability observations
   → run a read-only summary tool
   → review the resulting task evidence
   → ask a bounded, read-oriented question through a local model
@@ -37,7 +38,7 @@ Open Overview
 | Path | Purpose |
 |---|---|
 | `apps/api` | FastAPI control plane, execution core, providers, and workers |
-| `apps/web` | React operator desktop |
+| `apps/web` | Framework-free TypeScript operator console |
 | `apps/mcp` | MCP adapter over stdio and streamable HTTP |
 | [External Sentinel](https://github.com/imdelmare/homelab-console-sentinel) | Independently released availability sentinel |
 | `config` | Inventory examples and local-only provider configuration |
@@ -49,8 +50,8 @@ Open Overview
 1. Start with the [Product Tour](./product-tour.md) and the operator workflow.
 2. Read [Conversation Service](./conversation.md) for the current Ollama and
    private OpenAI-compatible model contracts and their bounded tool scope.
-3. Connect one integration using the normalized contracts in
-   [Providers](./providers.md).
+3. Connect one integration using the normalized backend contracts documented in
+   [Providers](./providers.md), then inspect it in the Systems section.
 4. Review how exact writes stop at the human boundary in
    [Security](./security.md).
 5. Use the [MCP adapter](./mcp.md) only when you want an external compatible

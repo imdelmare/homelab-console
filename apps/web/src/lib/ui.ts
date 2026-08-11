@@ -1,5 +1,5 @@
-// Pure helpers shared by the desktop app panels. No React in here so the
-// whole module is unit-testable.
+// Pure helpers shared by the operator console panels. With no framework
+// dependency, the whole module is unit-testable.
 import { ApiError } from "./api";
 import { parseApiDate } from "./format";
 import type { McpClient, McpPairingRequest, Task, TaskEvent, ToolDefinition } from "./types";

@@ -138,7 +138,7 @@ export function fetchAuthConfig() {
 }
 
 export function fetchSession() {
-  return request<SessionResponse>("/api/auth/session", { skipAuthRedirect: true });
+  return request<SessionResponse>("/api/auth/session", { cache: "no-store", skipAuthRedirect: true });
 }
 
 export function login(username: string, password?: string) {
