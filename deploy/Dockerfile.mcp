@@ -1,4 +1,4 @@
-# Homelab Console MCP HTTP — fallback deployment image
+# Homelab Console MCP HTTP — Community Compose image
 #
 # Build context must be the repository root, e.g.:
 #   docker build -f deploy/Dockerfile.mcp -t homelab-console-mcp .

@@ -2,7 +2,7 @@ import pytest
 
 from sqlalchemy import select
 
-from app.db.models import AuditEvent, McpClient
+from app.db.models import AuditEvent, McpClient, Task, TaskWorkerJob
 from app.domain.actors import Actor
 from app.services.mcp_clients import (
     McpClientError,
@@ -10,12 +10,15 @@ from app.services.mcp_clients import (
     decide_pairing_by_nonce,
     forget_mcp_client,
     list_mcp_clients,
+    mcp_client_actor,
     mcp_client_public,
     revoke_mcp_client,
     rotate_mcp_client_token,
+    set_mcp_client_capabilities,
     start_pairing,
     validate_client_token,
 )
+from app.api.routes_control import _mcp_client_http_error
 
 
 OPERATOR = Actor(kind="telegram", id="111", label="telegram operator")
@@ -123,6 +126,31 @@ async def test_mcp_pairing_accepts_opencode_identity(db_session):
     assert await validate_client_token(db_session, token=consumed.token, agent_id="codex") is None
 
 
+async def test_mcp_pairing_accepts_vendor_neutral_worker_identity(db_session):
+    pairing = await start_pairing(
+        db_session,
+        agent_id="worker",
+        client_label="Remediation adapter",
+        host_fingerprint="worker-host",
+    )
+    pairing.request.status = "approved"
+    pairing.request.decided_by = OPERATOR.audit_id()
+
+    consumed = await consume_pairing(
+        db_session,
+        request_id=pairing.request.id,
+        pairing_secret=pairing.pairing_secret,
+    )
+    await db_session.commit()
+
+    assert consumed.client.agent_id == "worker"
+    assert consumed.client.principal_id == ""
+    assert consumed.client.capabilities == []
+    assert await validate_client_token(
+        db_session, token=consumed.token, agent_id="worker"
+    ) is not None
+
+
 async def test_mcp_pairing_code_is_numeric_and_approves(db_session, monkeypatch):
     captured = {}
 
@@ -164,6 +192,7 @@ async def test_mcp_client_revocation_blocks_token(db_session):
     )
     db_session.add(client)
     await db_session.commit()
+    client_id = client.id
 
     revoked = await revoke_mcp_client(
         db_session,
@@ -176,6 +205,98 @@ async def test_mcp_client_revocation_blocks_token(db_session):
     assert revoked.revoked_at is not None
     assert revoked.revoked_reason == "lost laptop"
     assert "token_hash" not in mcp_client_public(revoked)
+
+
+async def test_mcp_worker_capability_is_operator_granted_and_changes_principal(db_session):
+    client = McpClient(
+        agent_id="codex",
+        client_label="Codex remediation worker",
+        host_fingerprint="worker-host",
+        token_hash="worker-hash",
+        token_hint="worker",
+    )
+    db_session.add(client)
+    await db_session.commit()
+    client_id = client.id
+
+    assert mcp_client_public(client)["capabilities"] == []
+    assert mcp_client_actor(client).audit_id() == "agent:codex"
+
+    with pytest.raises(McpClientError) as exc_info:
+        await set_mcp_client_capabilities(
+            db_session,
+            client_id=client_id,
+            capabilities=["task-worker.v1"],
+            actor=OPERATOR,
+        )
+    assert exc_info.value.code == "worker_conversion_confirmation_required"
+    await db_session.rollback()
+
+    updated = await set_mcp_client_capabilities(
+        db_session,
+        client_id=client_id,
+        capabilities=["task-worker.v1", "task-worker.v1"],
+        actor=OPERATOR,
+        confirm_worker_conversion=True,
+    )
+    await db_session.commit()
+
+    assert updated.capabilities == ["task-worker.v1"]
+    assert mcp_client_actor(updated).audit_id() == f"agent:worker:{client_id}"
+    public = mcp_client_public(updated)
+    assert public["principal_id"] == f"agent:worker:{client_id}"
+    audit = (
+        await db_session.execute(
+            select(AuditEvent).where(AuditEvent.action == "mcp.client.capabilities.update")
+        )
+    ).scalar_one()
+    assert audit.meta["previous"] == []
+    assert audit.meta["capabilities"] == ["task-worker.v1"]
+
+    disabled = await set_mcp_client_capabilities(
+        db_session,
+        client_id=client_id,
+        capabilities=[],
+        actor=OPERATOR,
+    )
+    await db_session.commit()
+    assert disabled.capabilities == []
+    assert mcp_client_actor(disabled).audit_id() == f"agent:worker:{client_id}"
+
+
+async def test_mcp_worker_capability_rejects_unknown_value_and_revoked_client(db_session):
+    client = McpClient(
+        agent_id="codex",
+        client_label="Codex remediation worker",
+        host_fingerprint="worker-host",
+        token_hash="worker-hash-2",
+        token_hint="worker-2",
+    )
+    db_session.add(client)
+    await db_session.commit()
+    client_id = client.id
+
+    with pytest.raises(McpClientError) as exc_info:
+        await set_mcp_client_capabilities(
+            db_session,
+            client_id=client_id,
+            capabilities=["arbitrary-power"],
+            actor=OPERATOR,
+        )
+    assert exc_info.value.code == "invalid_capability"
+    await db_session.rollback()
+
+    client = await db_session.get(McpClient, client_id)
+    client.revoked_at = client.created_at
+    await db_session.commit()
+    with pytest.raises(McpClientError) as exc_info:
+        await set_mcp_client_capabilities(
+            db_session,
+            client_id=client_id,
+            capabilities=["task-worker.v1"],
+            actor=OPERATOR,
+        )
+    assert exc_info.value.code == "client_revoked"
 
 
 async def test_forget_mcp_client_requires_revocation_and_preserves_audit(db_session):
@@ -212,6 +333,23 @@ async def test_forget_mcp_client_requires_revocation_and_preserves_audit(db_sess
     ).scalar_one()
     assert event.outcome == "success"
     assert event.meta == {"client_id": client_id, "agent_id": "codex"}
+
+
+async def test_forget_worker_client_with_history_preserves_tombstone_and_audit(db_session):
+    client = McpClient(agent_id="codex", token_hash="worker-history", token_hint="history")
+    db_session.add(client)
+    await db_session.flush()
+    # A historical job is sufficient; the task FK is intentionally not reached by forget.
+    task = Task(title="history")
+    db_session.add(task)
+    await db_session.flush()
+    db_session.add(TaskWorkerJob(task_id=task.id, client_id=client.id, principal_id="worker:history", task_version=1))
+    await revoke_mcp_client(db_session, client_id=client.id, reason="retired", actor=OPERATOR)
+    with pytest.raises(McpClientError) as exc:
+        await forget_mcp_client(db_session, client_id=client.id, actor=OPERATOR)
+    assert exc.value.code == "client_has_worker_history"
+    assert (await db_session.get(McpClient, client.id)).revoked_at is not None
+    assert _mcp_client_http_error(exc.value).status_code == 409
 
 
 async def test_mcp_client_rotation_invalidates_previous_token(db_session):

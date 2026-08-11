@@ -301,6 +301,9 @@ async def match_incident(
     if best_score < 40:
         return _new("candidate score below ambiguity threshold")
 
+    if not settings.conversation_enabled:
+        return _new("model-assisted matching disabled")
+
     calls = await db.scalar(
         select(func.count(AuditEvent.id)).where(
             AuditEvent.action == "watcher.incident_matcher",

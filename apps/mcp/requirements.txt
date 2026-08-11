@@ -1,2 +1,2 @@
 -r ../api/requirements.txt
-mcp==1.13.1
+mcp==1.28.1

@@ -5,14 +5,22 @@ Console. It covers the failure mode where the console, WireGuard path, or home
 network is unreachable and the normal watcher stack cannot report its own
 outage.
 
+The independently releasable HTTP, persistence and compatibility boundary is
+frozen in [`sentinel-contract-v1.md`](sentinel-contract-v1.md).
+
 Treat it as a dead-man switch, not a second control plane. It observes from the
 outside, deduplicates locally, and sends Telegram alerts directly from the VPS.
 Its automatic Telegram alerts and recoveries use US English; historical or
 user-provided content is not translated.
 
-## Milestone 1
+## Released runtime
 
-Implemented in `apps/sentinel`:
+The implementation, standalone tests, deployment assets and operator runbook
+live in
+[`imdelmare/homelab-console-sentinel`](https://github.com/imdelmare/homelab-console-sentinel).
+The first independently verified release is
+[`v1.0.0`](https://github.com/imdelmare/homelab-console-sentinel/releases/tag/v1.0.0).
+It provides:
 
 - fixed-config HTTP health checks;
 - heartbeat receiver at `POST /heartbeat/{source_id}`;
@@ -30,18 +38,9 @@ startup; runtime callers cannot provide arbitrary targets.
 
 ## Configuration
 
-Copy `config/sentinel.example.json` to a local, gitignored path such as
-`config/sentinel.local.json`, then set:
-
-```bash
-export SENTINEL_CONFIG_PATH=config/sentinel.local.json
-export SENTINEL_HEARTBEAT_TOKEN='long-random-token'
-export TELEGRAM_BOT_TOKEN='...'
-export TELEGRAM_ALLOWED_CHAT_ID='...'
-```
-
-Environment variables override the token, bind address, port, state path and
-Telegram credentials. Keep real values out of git.
+Use the configuration and environment templates shipped with the matching
+external release. Environment variables override the token, bind address, port,
+state path and Telegram credentials. Keep real values out of both repositories.
 
 Heartbeat clients call:
 
@@ -83,35 +82,31 @@ expose a public Sentinel hostname unless there is a specific reason to cross the
 public internet. If exposed, keep the bearer token mandatory and move signed
 heartbeats into Milestone 3 before relying on it across an untrusted path.
 
-For a VPS-only Docker deployment with the compose plugin, use:
+For a VPS-only Docker deployment, check out an exact release and follow its
+installation guide:
 
 ```bash
-docker compose -f deploy/docker-compose.sentinel.yml --env-file .env.sentinel up -d --build
+git clone --branch v1.0.0 https://github.com/imdelmare/homelab-console-sentinel.git
+cd homelab-console-sentinel
+docker compose -f deploy/compose.yaml --env-file .env.sentinel up -d --build
 ```
 
-`deploy/env.sentinel.example` is the environment template. Keep the filled
-`.env.sentinel` on the VPS only.
+Keep the filled `.env.sentinel` on the VPS only. Preserve the mounted `config/`
+and `data/` directories when replacing or rolling back the container.
 
 The current lab deployment is a direct Docker deployment on the VPS. Preserve
 the mounted `config/` and `data/` directories when replacing the container.
 
-On the cluster side, use the one-shot heartbeat sender rather than adding a
-runtime dependency from Sentinel back into the console:
+On the home side, ADR 0023 allows the FastAPI lifecycle to send the heartbeat
+every 60 seconds. The origin and source id come only from
+`providers.vps.sentinel_heartbeat`; the token comes from the untracked
+`SENTINEL_HEARTBEAT_TOKEN` environment value. Enable it with
+`SENTINEL_HEARTBEAT_ENABLED=true`. It is a fixed background integration, not a
+tool or request-driven HTTP proxy.
 
-```bash
-PYTHONPATH=apps/sentinel \
-SENTINEL_HEARTBEAT_URL=http://192.0.2.10:8766/heartbeat/home \
-SENTINEL_HEARTBEAT_TOKEN='long-random-token' \
-python -m sentinel.heartbeat_client
-```
-
-The systemd templates in `deploy/systemd/` run the same sender every 60 seconds.
-Install them on the Proxmox-side host or container that should represent
-console/home availability, with `/opt/homelab-console` pointing at this checkout
-and `/etc/homelab-console/sentinel-heartbeat.env` based on the example file.
-
-Before relying on alerts, execute the failure drills in
-operator Sentinel runbook.
+The external repository's runbook still owns Sentinel health, failure,
+persistence and rollback drills. This core repository retains the versioned
+contract and the narrow heartbeat client only.
 
 ## Later Milestones
 

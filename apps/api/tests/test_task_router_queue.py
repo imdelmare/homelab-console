@@ -53,6 +53,18 @@ async def test_enqueue_is_disabled_by_default(db_session):
     assert await enqueue_task_routing(db_session, task, OPERATOR, source="test") is None
 
 
+async def test_conversation_gate_overrides_enabled_router(db_session, monkeypatch):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "conversation_enabled", False)
+    monkeypatch.setattr(settings, "task_router_enabled", True)
+    task = await create_task(db_session, "Router gated", "No model runtime", OPERATOR)
+
+    assert await enqueue_task_routing(db_session, task, OPERATOR, source="test") is None
+    await db_session.commit()
+    assert await process_once(model=FakeRouterModel()) is False
+    assert (await db_session.execute(select(TaskRouterJob))).scalars().all() == []
+
+
 async def test_async_router_job_is_idempotent_and_processed(db_session, monkeypatch):
     monkeypatch.setattr(get_settings(), "task_router_enabled", True)
     task = await create_task(db_session, "Gateway warning", "Collect evidence", OPERATOR)

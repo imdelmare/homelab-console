@@ -1,4 +1,4 @@
-# Homelab Console API — fallback deployment image
+# Homelab Console API — Community Compose image
 #
 # Build context must be the repository root, e.g.:
 #   docker build -f deploy/Dockerfile.api -t homelab-console-api .

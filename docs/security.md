@@ -14,7 +14,8 @@ most of the design:
   remain outside model surfaces, and the tool plane exposes no generic
   lateral-movement capability.
 - Providers are reached directly over the trusted LAN through typed adapters.
-  The WireGuard peer is reserved for outbound Sentinel heartbeat/deployment
+  The WireGuard peer is reserved for the inventory-bound API-lifecycle Sentinel
+  heartbeat and deployment
   traffic and does not route the home LAN. The live catalog is read-only; any
   future write capability must be individually approved and never becomes a
   general tunnel, SSH gateway, or arbitrary-URL proxy.
@@ -35,7 +36,8 @@ most of the design:
 See the ASCII diagram in [`architecture.md`](architecture.md#trust-boundaries).
 In short: Internet → Cloudflare Tunnel/reverse proxy → loopback API → typed
 provider adapters over the trusted LAN. A separate outbound WireGuard path
-carries Sentinel heartbeats to the VPS. The API, database, MCP origin and
+carries the fixed ADR 0023 heartbeat from the API lifecycle to the VPS. The API,
+database, MCP origin and
 provider APIs are never directly exposed. Under ADR 0017, the dedicated MCP
 hostname reaches the LAN MCP origin only through Cloudflare Tunnel and still
 requires a per-client bearer token on every request.
@@ -68,7 +70,8 @@ Telegram account, bot-token, webhook-secret or allowed-ID compromise and must
 be rolled back to `password` if that identity boundary is in doubt.
 
 MCP HTTP access is client-scoped: each approved client gets its own token,
-agent id (`claude`, `fixer`, `codex`, `cline`, or `opencode`), label, fingerprint, dashboard row,
+agent id (`claude`, `fixer`, `codex`, `cline`, `opencode`, or `worker`), label,
+fingerprint, dashboard row,
 revocation state, and `last_seen_at`. Individual MCP tool calls cannot choose
 or spoof the agent identity; it is derived from the bearer token record.
 The public MCP hostname does not use Cloudflare Access: possession of an
@@ -178,7 +181,9 @@ remain disabled unless separately approved despite this defence.
 ## Task ownership
 
 Once a task is claimed, `app.services.tasks_service` enforces that only the
-claiming agent (`agent:claude`, `agent:fixer`, `agent:codex`, `agent:cline`, or `agent:opencode`) can mutate it further
+claiming agent (`agent:claude`, `agent:fixer`, `agent:codex`, `agent:cline`,
+`agent:opencode`, or a per-client `agent:worker:<client-id>` principal) can
+mutate it further
 (`not_task_owner` otherwise); a human operator acting through the
 authenticated web UI or Telegram always bypasses this (administrative
 override), and an agent may not touch a task that hasn't been claimed
@@ -189,13 +194,25 @@ registry: for HTTP clients, the agent identity comes from the approved
 per-client token record. Revoke a client token from the MCP dashboard when a
 machine, tool, or local config should no longer access the control plane.
 
-The optional OpenCode Fixer uses the separate `agent:fixer` identity. Before
+The optional legacy OpenCode Fixer uses the separate `agent:fixer` identity. Before
 the API contacts its loopback supervisor, it records and verifies an exact
 `task.fixer_dispatch_requested` event bound to the task, actor, owner and
 dispatchable state. The static dispatch secret authenticates process launch;
 the dedicated MCP token, task ownership checks and execution core independently
 control what that process can read or change. Legacy `claude-fixer` clients are
 revoked during deployment rather than accepted through a compatibility alias.
+ADR 0024 replaces this with per-client remediation worker principals,
+operator-granted capability and durable lease fencing. Core enforcement binds
+task mutation, approval request/consumption and task-bound infrastructure calls
+to the authenticated client, worker job and current lease generation. A
+core-owned recovery loop fences expired workers and releases exhausted jobs.
+The legacy boundary remains available only for rollback until an external pull
+adapter passes conformance, and must never process the same task concurrently.
+Granting `task-worker.v1` permanently converts that MCP registration to a unique
+worker principal. Removing the capability does not downgrade its bearer token
+back to the shared interactive agent family. Revocation closes active jobs and
+releases non-final tasks; registrations with worker history remain audit
+tombstones and cannot be forgotten.
 
 All status changes, including claim/release and guarded watcher
 auto-completion, pass through one transition helper and append the canonical

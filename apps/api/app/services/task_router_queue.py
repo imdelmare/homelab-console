@@ -95,7 +95,8 @@ async def enqueue_task_routing(
 ) -> TaskRouterJob | None:
     """Create at most one routing job in the caller's task transaction."""
 
-    if not get_settings().task_router_enabled:
+    settings = get_settings()
+    if not settings.conversation_enabled or not settings.task_router_enabled:
         return None
     row = TaskRouterJob(
         task_id=task.id,
@@ -242,7 +243,8 @@ def _safe_error_message(error: Exception) -> str:
 async def process_once(*, model: TaskRouterModel | None = None) -> bool:
     """Claim one job without holding a database lock during inference."""
 
-    if not get_settings().task_router_enabled:
+    settings = get_settings()
+    if not settings.conversation_enabled or not settings.task_router_enabled:
         return False
     async with get_session_factory()() as db:
         if not await try_advisory_xact_lock(db, "homelab.task_router.worker"):

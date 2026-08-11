@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     secrets_path: str = "config/secrets.local.yml"
     runbooks_config_path: str = "config/runbooks.example.yml"
 
+    # Optional dead-man heartbeat sent by the API lifecycle to the
+    # inventory-declared External Sentinel endpoint.
+    sentinel_heartbeat_enabled: bool = False
+    sentinel_heartbeat_token: str = ""
+
     audit_jsonl_enabled: bool = False
     audit_jsonl_path: str = "data/audit.jsonl"
 
@@ -80,6 +85,10 @@ class Settings(BaseSettings):
     fixer_dispatch_timeout_seconds: float = 5.0
 
     openai_api_key: str = ""
+    # Explicit kill switch for every model-dependent conversation path. Keep
+    # the compatibility default enabled; model-independent deployments set it
+    # false and do not need any model credentials or endpoints.
+    conversation_enabled: bool = True
     conversation_provider: Literal["openai", "ollama", "ai_manager", "opencode_go"] = "ollama"
     conversation_model: str = "gpt-5.6-luna"
     opencode_go_api_key: str = ""
@@ -119,6 +128,12 @@ class Settings(BaseSettings):
     task_router_worker_interval_seconds: float = 1.0
     task_router_job_lease_seconds: int = 300
     task_router_max_attempts: int = 3
+    remediation_worker_lease_ttl_seconds: int = 300
+    remediation_worker_max_lease_lifetime_seconds: int = 1800
+    remediation_worker_retry_seconds: int = 30
+    remediation_worker_max_attempts: int = 3
+    remediation_worker_poll_seconds: int = 5
+    remediation_worker_recovery_interval_seconds: float = 5.0
     incident_matcher_enabled: bool = True
     incident_matcher_max_candidates: int = 5
     incident_matcher_max_calls_per_hour: int = 10

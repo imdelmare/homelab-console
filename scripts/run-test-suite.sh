@@ -25,6 +25,7 @@ export WATCHERS_INTERVAL_SECONDS="300"
 export WATCHERS_MIN_SEVERITY="warning"
 export WATCHERS_IGNORE_PATTERNS=""
 export WATCHERS_RESOLVE_AFTER_MISSING_RUNS="3"
+export TASK_ROUTER_ENABLED="false"
 
 if [[ ! -x "$PYTHON_BIN" ]]; then
   echo "Missing API virtualenv python at $PYTHON_BIN" >&2
@@ -52,8 +53,7 @@ Suites:
   tools     Suite 5: execution/tool-router safety coverage
   mcp       Suite 6: MCP adapter/client registration coverage
   ui        Suite 7: UI regression gate (TypeScript + Vite build)
-  sentinel  External Sentinel standalone tests
-  all       API tests + web build + Sentinel tests
+  all       API tests + web build
 EOF
 }
 
@@ -75,18 +75,14 @@ case "$suite" in
     run_api_pytest tests/test_execution.py tests/test_tool_governance.py tests/test_wave1_tools.py tests/test_network_safety.py
     ;;
   mcp)
-    run_api_pytest tests/test_mcp_clients.py tests/test_mcp_adapter.py
+    run_api_pytest tests/test_mcp_clients.py tests/test_mcp_adapter.py tests/test_remediation_workers.py
     ;;
   ui)
     run_web_build
     ;;
-  sentinel)
-    "$PYTHON_BIN" -m pytest "$ROOT_DIR/apps/sentinel/tests"
-    ;;
   all)
     run_api_pytest tests
     run_web_build
-    "$PYTHON_BIN" -m pytest "$ROOT_DIR/apps/sentinel/tests"
     ;;
   -h|--help|help|"")
     usage

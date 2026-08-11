@@ -13,6 +13,7 @@ import {
   fetchTaskDetail,
   fetchTasks,
   fetchMcpClients,
+  assignWorkerTask,
   handoffTaskToClient,
   releaseTaskWithHandoff,
   setTaskStatus,
@@ -103,7 +104,18 @@ export function TasksApp({ requestedTaskId, username }: { requestedTaskId?: stri
   const detail = detailQuery.data?.detail ?? null;
   const context = detailQuery.data?.context ?? null;
   const detailLoading = Boolean(selectedTaskId) && detailQuery.loadState === "loading";
-  const onlineClients = (clientsQuery.data ?? []).filter(isMcpClientOnline);
+  const onlineClients = (clientsQuery.data ?? []).filter(
+    (client) =>
+      isMcpClientOnline(client) &&
+      client.agent_id !== "worker" &&
+      !client.principal_id.startsWith("agent:worker:"),
+  );
+  const workerClients = (clientsQuery.data ?? []).filter(
+    (client) =>
+      isMcpClientOnline(client) &&
+      client.capabilities.includes("task-worker.v1") &&
+      client.principal_id.startsWith("agent:worker:"),
+  );
   const effectiveHandoffClientId = onlineClients.some((client) => client.id === handoffClientId)
     ? handoffClientId
     : onlineClients[0]?.id ?? "";
@@ -391,6 +403,11 @@ export function TasksApp({ requestedTaskId, username }: { requestedTaskId?: stri
                         <Button disabled={Boolean(taskAction) || detail.status !== "open"} onClick={() => runTaskAction("assign-codex", () => claimTask(detail.id, "agent:codex"))}>Codex</Button>
                         <Button disabled={Boolean(taskAction) || detail.status !== "open"} onClick={() => runTaskAction("assign-cline", () => claimTask(detail.id, "agent:cline"))}>Cline</Button>
                         <Button disabled={Boolean(taskAction) || detail.status !== "open"} onClick={() => runTaskAction("assign-opencode", () => claimTask(detail.id, "agent:opencode"))}>OpenCode</Button>
+                        {workerClients.map((wc) => (
+                          <Button key={wc.id} disabled={Boolean(taskAction) || detail.status !== "open"} onClick={() => runTaskAction("assign-worker", () => assignWorkerTask(detail.id, wc.id, detail.version))}>
+                            W: {wc.client_label || wc.agent_id}
+                          </Button>
+                        ))}
                       </div>
                     </details>
                   )}

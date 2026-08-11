@@ -185,31 +185,6 @@ class AdguardResumeOutput(BaseModel):
     verified: bool
 
 
-class SpeedtestServerOutput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    id: int
-    name: str
-    location: str
-    country: str
-
-
-class SpeedtestLatestOutput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    instance_id: str
-    measured_at: str
-    download_mbps: float = Field(ge=0)
-    upload_mbps: float = Field(ge=0)
-    ping_ms: float = Field(ge=0)
-    jitter_ms: float = Field(ge=0)
-    packet_loss_percent: float | None = None
-    server: SpeedtestServerOutput
-    isp: str
-    interface_name: str
-    result_url: str | None = None
-
-
 class HomeAssistantStatesInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -781,13 +756,6 @@ def _api_ready_runner(instance_id: str):
     return run
 
 
-def _speedtest_probe_runner(instance_id: str):
-    async def run(_: BaseModel) -> dict:
-        return await api_ready_tools.speedtest_run(instance_id)
-
-    return run
-
-
 def _api_ready_tools() -> list[ToolDefinition]:
     tools: list[ToolDefinition] = []
     static_provider_ids = {tool.provider_id for tool in _TOOLS}
@@ -801,13 +769,6 @@ def _api_ready_tools() -> list[ToolDefinition]:
             description = "Read normalized tunnel state from Cloudflare's official API."
             runner = _api_ready_runner(instance.id)
             output_model = None
-        elif instance.driver == "speedtest_probe_v1":
-            suffix = "speedtest.run"
-            name = f"{instance.name or instance.id} Run Speedtest"
-            description = "Run a new speedtest on the declared home probe and return its result."
-            runner = _speedtest_probe_runner(instance.id)
-            output_model = SpeedtestLatestOutput
-            risk = "medium"
         else:
             suffix = "health.status"
             name = f"{instance.name or instance.id} Health"

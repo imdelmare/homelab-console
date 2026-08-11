@@ -18,23 +18,6 @@ class JsonHealthV1Client(BaseJsonClient):
             self.headers = {"Authorization": f"Bearer {token}"}
 
 
-class SpeedtestProbeV1Client(BaseJsonClient):
-    """Client for the fixed home speedtest probe contract."""
-
-    def __init__(self, instance: ApiProviderInstanceEntry) -> None:
-        super().__init__()
-        self.provider_id = instance.id
-        self.base_url = instance.base_url.rstrip("/")
-        self.verify_tls = instance.verify_tls
-        self.timeout_seconds = instance.timeout_seconds
-        token = str(get_provider_secrets(instance.id).get("bearer_token") or "")
-        if token:
-            self.headers = {"Authorization": f"Bearer {token}"}
-
-    def has_credentials(self) -> bool:
-        return "Authorization" in self.headers
-
-
 class CloudflareTunnelV1Client(CloudflareApiClient):
     """Client for one declared tunnel through Cloudflare's official API."""
 

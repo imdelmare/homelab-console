@@ -4,10 +4,13 @@ from datetime import timedelta
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 
-from app.db.models import Approval, AuditEvent, TaskEvent, ToolInvocation, utcnow
+from app.db.models import Approval, AuditEvent, McpClient, TaskEvent, ToolInvocation, utcnow
 from app.db.session import get_session_factory
 from app.domain.actors import Actor
-from app.services.approvals_service import input_digest
+from app.services.approvals_service import input_digest, request_approval
+from app.services.mcp_clients import revoke_mcp_client
+from app.services.remediation_workers import assign_worker_task, recover_expired_worker_jobs, worker_next
+from app.services.tasks_service import create_task
 from app.tools import registry
 from app.tools.execution import execute_tool
 from app.tools.governance import APPROVED_WRITE_TOOLS
@@ -56,6 +59,109 @@ async def test_unknown_tool_rejected():
     assert result.ok is False
     assert result.error is not None
     assert result.error.code == "unknown_tool"
+
+
+async def test_worker_execution_requires_identity_bound_live_lease(db_session, monkeypatch):
+    _fake_tool(monkeypatch)
+    worker_client = McpClient(
+        agent_id="codex",
+        client_label="Codex worker",
+        host_fingerprint="worker-host",
+        token_hash="execution-worker-hash",
+        token_hint="worker",
+        capabilities=["task-worker.v1"],
+    )
+    db_session.add(worker_client)
+    await db_session.flush()
+    worker_client.principal_id = f"worker:{worker_client.id}"
+    task = await create_task(db_session, "repair", "test lease", OPERATOR)
+    task, job = await assign_worker_task(
+        db_session,
+        task_id=task.id,
+        client_id=worker_client.id,
+        actor=OPERATOR,
+    )
+    acquired = await worker_next(db_session, client_id=worker_client.id)
+    lease = acquired["job"]
+    await db_session.commit()
+    actor = Actor(kind="agent", id=worker_client.principal_id, label="worker")
+
+    missing = await execute_tool("test.echo", {}, actor, task_id=task.id)
+    assert missing.error is not None
+    assert missing.error.code == "invalid_worker_lease"
+
+    wrong_actor = await execute_tool(
+        "test.echo",
+        {},
+        Actor(kind="agent", id="worker:another-client"),
+        task_id=task.id,
+        worker_client_id=worker_client.id,
+        worker_job_id=job.id,
+        worker_lease_token=lease["lease_token"],
+    )
+    assert wrong_actor.error is not None
+    assert wrong_actor.error.code == "invalid_worker_lease"
+
+    valid = await execute_tool(
+        "test.echo",
+        {},
+        actor,
+        task_id=task.id,
+        worker_client_id=worker_client.id,
+        worker_job_id=job.id,
+        worker_lease_token=lease["lease_token"],
+    )
+    assert valid.ok is True
+
+
+async def test_worker_approval_cannot_cross_lease_generation(db_session, monkeypatch):
+    _fake_tool(monkeypatch, mode="write", risk="low")
+    monkeypatch.setitem(APPROVED_WRITE_TOOLS, "test.echo", "docs/decisions/0004.md")
+    worker_client = McpClient(
+        agent_id="codex", client_label="worker", host_fingerprint="host", token_hash="worker-binding",
+        token_hint="binding", capabilities=["task-worker.v1"],
+    )
+    db_session.add(worker_client)
+    await db_session.flush()
+    worker_client.principal_id = f"worker:{worker_client.id}"
+    task = await create_task(db_session, "repair", "approval binding", OPERATOR)
+    task, job = await assign_worker_task(db_session, task_id=task.id, client_id=worker_client.id, actor=OPERATOR)
+    first_lease = (await worker_next(db_session, client_id=worker_client.id))["job"]
+    actor = Actor(kind="agent", id=worker_client.principal_id, label="worker")
+    approval = await request_approval(
+        db_session, tool_id="test.echo", raw_input={}, actor=actor, task_id=task.id, source="mcp", worker_job=job,
+    )
+    approval.status = "approved"
+    job.lease_expires_at = utcnow() - timedelta(seconds=1)
+    await recover_expired_worker_jobs(db_session)
+    job.available_at = utcnow() - timedelta(seconds=1)
+    second_lease = (await worker_next(db_session, client_id=worker_client.id))["job"]
+    await db_session.commit()
+
+    assert job.lease_generation == 2
+    rejected = await execute_tool(
+        "test.echo", {}, actor, task_id=task.id, approval_id=approval.id,
+        worker_client_id=worker_client.id, worker_job_id=job.id, worker_lease_token=second_lease["lease_token"],
+    )
+    assert rejected.error is not None
+    assert rejected.error.code == "approval_required"
+    # The old lease token never reaches persistence or the execution audit.
+    assert first_lease["lease_token"] not in str(rejected.model_dump(mode="json"))
+
+    current_approval = await request_approval(
+        db_session, tool_id="test.echo", raw_input={}, actor=actor, task_id=task.id, source="mcp", worker_job=job,
+    )
+    current_approval.status = "approved"
+    await revoke_mcp_client(db_session, client_id=worker_client.id, reason="test revoke", actor=OPERATOR)
+    await db_session.commit()
+    revoked = await execute_tool(
+        "test.echo", {}, actor, task_id=task.id, approval_id=current_approval.id,
+        worker_client_id=worker_client.id, worker_job_id=job.id, worker_lease_token=second_lease["lease_token"],
+    )
+    assert revoked.error is not None
+    assert revoked.error.code == "worker_client_revoked"
+    async with get_session_factory()() as db:
+        assert (await db.get(Approval, current_approval.id)).status == "approved"
 
 
 async def test_disabled_tool_rejected(monkeypatch):
