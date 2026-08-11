@@ -7,9 +7,7 @@ from pydantic import ValidationError
 from app.providers.api_ready.tools import (
     _normalized_cloudflare_tunnel,
     _normalized_health,
-    _normalized_speedtest,
     health_status,
-    speedtest_run,
 )
 from app.providers.errors import ProviderError
 from app.services.inventory import CLOUDFLARE_API_BASE_URL, ApiProviderInstanceEntry
@@ -34,17 +32,6 @@ def _cloudflare_instance() -> ApiProviderInstanceEntry:
         driver="cloudflare_tunnel_v1",
         account_id="0123456789abcdef0123456789abcdef",
         tunnel_id=TUNNEL_ID,
-    )
-
-
-def _speedtest_instance() -> ApiProviderInstanceEntry:
-    return ApiProviderInstanceEntry(
-        id="home_speedtest",
-        name="Home Speedtest",
-        driver="speedtest_probe_v1",
-        base_url="http://10.0.0.70:8780",
-        verify_tls=False,
-        timeout_seconds=140,
     )
 
 
@@ -94,13 +81,12 @@ def test_cloudflare_driver_uses_only_the_official_api_contract():
         )
 
 
-def test_speedtest_driver_rejects_insecure_public_endpoints():
-    with pytest.raises(ValidationError, match="private endpoint"):
+def test_retired_speedtest_driver_is_rejected():
+    with pytest.raises(ValidationError):
         ApiProviderInstanceEntry(
-            id="public_speedtest",
-            driver="speedtest_probe_v1",
-            base_url="http://speedtest.example.com",
-            verify_tls=False,
+            id="retired_speedtest",
+            driver=cast(Any, "speedtest_probe_v1"),
+            base_url="http://10.0.0.70:8780",
         )
 
 
@@ -209,70 +195,6 @@ async def test_cloudflare_driver_requires_a_bearer_token(monkeypatch):
     assert "token" not in exc_info.value.message.lower() or "not configured" in exc_info.value.message
 
 
-def test_speedtest_normalizer_returns_only_allowlisted_fields():
-    result = _normalized_speedtest(
-        {
-            "measured_at": "2026-07-24T10:00:00Z",
-            "download_mbps": 100.5,
-            "upload_mbps": 20.25,
-            "ping_ms": 12.5,
-            "jitter_ms": 1.2,
-            "packet_loss_percent": 0.0,
-            "server": {
-                "id": 123,
-                "name": "Example",
-                "location": "Rome",
-                "country": "Italy",
-                "ip": "discarded",
-            },
-            "isp": "Example ISP",
-            "interface_name": "eth0",
-            "result_url": "https://www.speedtest.net/result/123",
-            "private": "discarded",
-        },
-        "home_speedtest",
-    )
-
-    assert result["instance_id"] == "home_speedtest"
-    assert result["download_mbps"] == 100.5
-    assert "private" not in result
-    assert "ip" not in result["server"]
-
-
-async def test_speedtest_tool_uses_fixed_run_path_and_bearer_token(monkeypatch):
-    request = AsyncMock(
-        return_value={
-            "measured_at": "2026-07-24T10:00:00Z",
-            "download_mbps": 100,
-            "upload_mbps": 20,
-            "ping_ms": 12,
-            "jitter_ms": 1,
-            "packet_loss_percent": None,
-            "server": {"id": 123, "name": "Example", "location": "Rome", "country": "Italy"},
-            "isp": "Example ISP",
-            "interface_name": "eth0",
-            "result_url": None,
-        }
-    )
-    monkeypatch.setattr(
-        "app.providers.api_ready.tools.get_api_provider_instance",
-        lambda instance_id: _speedtest_instance(),
-    )
-    monkeypatch.setattr(
-        "app.providers.api_ready.client.get_provider_secrets",
-        lambda provider_id: {"bearer_token": "test-token"},
-    )
-    monkeypatch.setattr(
-        "app.providers.api_ready.client.SpeedtestProbeV1Client.post",
-        request,
-    )
-
-    result = await speedtest_run("home_speedtest")
-
-    request.assert_awaited_once_with("/v1/tests/run")
-    assert result["ping_ms"] == 12.0
-
-
 def test_declared_instance_creates_one_narrow_read_tool(monkeypatch):
     monkeypatch.setattr("app.tools.registry.list_api_provider_instances", lambda: [_instance()])
     from app.tools.registry import get_tool
@@ -300,20 +222,3 @@ def test_cloudflare_instance_creates_one_narrow_read_tool(monkeypatch):
     assert tool.mode == "read"
     assert tool.risk == "low"
     assert tool.input_model.model_json_schema().get("properties") == {}
-
-
-def test_speedtest_instance_creates_one_narrow_read_tool(monkeypatch):
-    monkeypatch.setattr(
-        "app.tools.registry.list_api_provider_instances",
-        lambda: [_speedtest_instance()],
-    )
-    from app.tools.registry import get_tool
-
-    tool = get_tool("home_speedtest.speedtest.run")
-
-    assert tool is not None
-    assert tool.provider_id == "home_speedtest"
-    assert tool.mode == "read"
-    assert tool.risk == "medium"
-    assert tool.input_model.model_json_schema().get("properties") == {}
-    assert tool.output_model is not None

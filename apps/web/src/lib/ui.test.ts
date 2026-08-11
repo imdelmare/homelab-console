@@ -44,6 +44,8 @@ function makeClient(overrides: Partial<McpClient> = {}): McpClient {
     revoked_at: null,
     revoked_reason: "",
     created_by: "user:test",
+    capabilities: [],
+    principal_id: "agent:codex",
     ...overrides,
   };
 }

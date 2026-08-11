@@ -13,6 +13,7 @@ async def test_operational_health_reports_core_sections(db_session):
     assert health["database"]["dialect"] == "postgresql"
     assert "retention" in health
     assert "notification_counts" in health["workers"]
+    assert health["workers"]["sentinel_heartbeat"]["enabled"] is False
     assert health["provider_errors"] == []
 
 

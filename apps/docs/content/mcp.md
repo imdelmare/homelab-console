@@ -6,14 +6,21 @@ infrastructure tool plane used by REST, and can also operate persistent tasks
 through narrow task tools. They do not get shell, SSH, arbitrary HTTP, raw API
 forwarding or provider-specific shortcuts.
 
-The automatically dispatched Fixer operating policy and OpenCode bootstrap
-prompt are documented in isolated worker documentation.
+The current legacy Fixer operating policy and OpenCode bootstrap prompt are
+documented in isolated worker documentation. ADR 0024 defines its
+migration to capability-gated, vendor-neutral remediation workers. The core now
+implements per-client identity, operator assignment, durable jobs,
+`tasks.worker.next/renew/finish`, lease recovery and fencing. Worker task
+mutations, approval requests and task-bound infrastructure calls all require the
+same active lease; generic claim/create/reopen remain unavailable.
+The first conversion requires an explicit irreversible-conversion confirmation;
+removing the capability later disables eligibility but preserves the unique
+worker principal for that bearer token.
 
 ## Same execution core, different transport
 
-The MCP adapter is a thin transport layer. Every tool call it receives is
-forwarded to the same `execute_tool(tool_id, validated_input, actor,
-source="mcp", task_id=task_id, approval_id=approval_id)` function described in
+The MCP adapter is a thin transport layer. Every infrastructure tool call it
+receives is forwarded to the same `execute_tool` function described in
 [`architecture.md`](architecture.md#shared-execution-core) that backs
 the REST API. There is no separate MCP-only implementation of tool logic,
 policy, or redaction — MCP is another door into the same house, not a
@@ -54,12 +61,13 @@ live runtime helpers and `apps/mcp/requirements.txt` for dependencies.
 
 Stdio clients authenticate as the configured agent identity **`MCP_AGENT_ID`**
 (see `.env.example`). `MCP_AGENT_ID` must be `claude`,
-`fixer`, `codex`, `cline`, or `opencode`; it is read from the process environment/configuration at
-startup and is not accepted from individual tool calls.
+`fixer`, `codex`, `cline`, `opencode`, or the vendor-neutral `worker`; it is
+read from the process environment/configuration at startup and is not accepted
+from individual tool calls.
 
 HTTP clients authenticate with per-client bearer tokens. The token itself
-determines the client identity (`claude`, `fixer`, `codex`, `cline`, or `opencode`), label,
-fingerprint, dashboard row, and `last_seen_at`.
+determines the client identity (`claude`, `fixer`, `codex`, `cline`, `opencode`,
+or `worker`), label, fingerprint, dashboard row, and `last_seen_at`.
 
 ## HTTP Onboarding
 
@@ -85,12 +93,20 @@ Use these values per client:
 | Fixer | `fixer` | `Fixer` | `opencode-fixer` |
 | Cline | `cline` | `Cline operator-workstation` | `operator-workstation` |
 | OpenCode | `opencode` | `OpenCode operator-workstation` | `operator-workstation` |
+| Remediation adapter | `worker` | `Remediation worker` | `worker-host` |
+
+Use `worker` for a provider-independent remediation adapter. Before the
+operator grants `task-worker.v1`, that registration is quarantined to task
+reads: it cannot claim work, mutate tasks, call infrastructure tools or acquire
+leases. The first grant permanently converts it to its per-client worker
+principal. Provider-specific worker registrations remain supported for
+compatibility, but the generic identity avoids core changes for a new engine.
 
 `client_label` is what the dashboard shows. `host_fingerprint` should be stable
 for that machine; the hostname is enough for this homelab setup.
 
 The **MCP Clients** window can start this flow directly: choose Codex, Claude,
-Fixer, Cline or OpenCode, enter the label and host fingerprint, click **Start Telegram pairing**,
+Fixer, Cline, OpenCode or Remediation worker, enter the label and host fingerprint, click **Start Telegram pairing**,
 then approve the Telegram request. The UI checks approval immediately and then
 every 2 seconds until the request is approved or expires; **Check approval**
 can also be clicked manually. When approved, the UI shows the plaintext bearer
@@ -126,10 +142,14 @@ Do not use a shared static token.
 
 ### Pairing boundary
 
-Start and consume pairing through the authenticated dashboard. The internal
-pairing endpoints require the normal web session and CSRF protections and are
-not part of the public MCP transport. Never script them as unauthenticated
-calls or expose their one-time pairing secret to an MCP client.
+Start and consume pairing through the operator dashboard. The narrow onboarding
+endpoints are reachable without a web session so a new client can bootstrap,
+but they are not MCP tools: start is rate-limited, Telegram approval is
+mandatory, and consume requires the one-time pairing secret returned only to
+the initiating browser. Pairing history and all client administration remain
+authenticated; capability grants additionally require CSRF protection. Never
+expose the pairing secret to an MCP client or treat Telegram approval as a
+reusable credential.
 
 ### Client Configuration
 
@@ -331,13 +351,17 @@ Once a task is `assigned_agent`-claimed, only that agent may mutate it.
 `tasks.release`, `tasks.set_status`, `tasks.update_summary`, `tasks.add_note`,
 `tasks.add_finding`, `tasks.resolve_finding`, `tasks.add_check`,
 `tasks.complete_check`, `tasks.skip_check` and `tasks.complete` all check
-that the calling agent (`agent:claude`, `agent:fixer`, `agent:codex`, `agent:cline`, or `agent:opencode`,
-from `MCP_AGENT_ID`)
+that the calling agent (`agent:claude`, `agent:fixer`, `agent:codex`,
+`agent:cline`, `agent:opencode`, or the authenticated client's
+`agent:worker:<client-id>` principal)
 matches `assigned_agent`; a mismatch — including an agent trying to act on a
 task nobody has claimed yet — fails with `not_task_owner`. A human operator
 acting through the authenticated web UI (REST, `kind="user"`) or Telegram
 always bypasses this check (administrative override); `tasks.claim` itself
 stays atomic and idempotent for the same agent re-claiming its own task.
+Worker principals cannot use `tasks.claim`; operator assignment and a current
+lease are required before their task mutations or task-bound infrastructure
+calls are accepted.
 
 `tasks.release` works from any active assigned status — `claimed`,
 `investigating`, `waiting_operator`, `blocked` — and always returns the task

@@ -22,6 +22,7 @@ from app.services.approvals_service import input_digest
 from app.services.audit import write_audit
 from app.services.inventory import medium_risk_allowlist
 from app.services.redaction import redact
+from app.services.remediation_workers import RemediationWorkerError, validate_worker_lease
 from app.services.tasks_service import FINAL_TASK_STATUSES, agent_identity
 from app.tools.governance import APPROVED_WRITE_TOOLS
 from app.tools.registry import ToolDefinition, get_tool
@@ -71,6 +72,9 @@ async def execute_tool(
     task_id: str | None = None,
     approval_id: str | None = None,
     source: str | None = None,
+    worker_client_id: str | None = None,
+    worker_job_id: str | None = None,
+    worker_lease_token: str | None = None,
 ) -> ExecutionResult:
     started = datetime.now(UTC)
     invocation_id = str(uuid4())
@@ -125,6 +129,29 @@ async def execute_tool(
     async with get_session_factory()() as db:
         task: Task | None = None
         attach_task_event = False
+        worker_actor = actor.kind == "agent" and actor.id.startswith("worker:")
+        worker_job = None
+        if error is None and worker_actor:
+            if not task_id or not worker_client_id or not worker_job_id or not worker_lease_token:
+                error = ExecutionError(
+                    code="invalid_worker_lease",
+                    message="worker tool execution requires task and lease metadata",
+                )
+            else:
+                try:
+                    worker_job = await validate_worker_lease(
+                        db,
+                        task_id=task_id,
+                        worker_job_id=worker_job_id,
+                        worker_lease_token=worker_lease_token,
+                        client_id=worker_client_id,
+                    )
+                    if actor.id != worker_job.principal_id:
+                        raise RemediationWorkerError(
+                            "invalid_worker_lease", "worker lease is not valid"
+                        )
+                except RemediationWorkerError as exc:
+                    error = ExecutionError(code=exc.code, message=exc.message)
         if error is None and task_id:
             task = await db.get(Task, task_id, with_for_update=True)
             if task is None:
@@ -158,17 +185,27 @@ async def execute_tool(
                 if task_id:
                     task_scope = or_(task_scope, Approval.task_id == task_id)
                 digest = input_digest(validated_input)
+                approval_conditions = [
+                    Approval.id == approval_id,
+                    Approval.status == "approved",
+                    Approval.consumed_at.is_(None),
+                    or_(Approval.tool_id == "", Approval.tool_id == active_tool.id),
+                    or_(Approval.input_hash == "", Approval.input_hash == digest),
+                    task_scope,
+                    Approval.expires_at > utcnow(),
+                ]
+                if worker_actor:
+                    assert worker_job is not None
+                    approval_conditions.extend(
+                        [
+                            Approval.requested_by == actor.audit_id(),
+                            Approval.worker_job_id == worker_job.id,
+                            Approval.worker_lease_generation == worker_job.lease_generation,
+                        ]
+                    )
                 claimed = await db.execute(
                     update(Approval)
-                    .where(
-                        Approval.id == approval_id,
-                        Approval.status == "approved",
-                        Approval.consumed_at.is_(None),
-                        or_(Approval.tool_id == "", Approval.tool_id == active_tool.id),
-                        or_(Approval.input_hash == "", Approval.input_hash == digest),
-                        task_scope,
-                        Approval.expires_at > utcnow(),
-                    )
+                    .where(*approval_conditions)
                     .values(status="consumed", consumed_at=utcnow())
                     .returning(Approval.id)
                 )

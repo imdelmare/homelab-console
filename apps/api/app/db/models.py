@@ -77,6 +77,14 @@ class LoginChallenge(Base):
 
 class McpClient(Base):
     __tablename__ = "mcp_clients"
+    __table_args__ = (
+        Index(
+            "ux_mcp_clients_principal_id_nonempty",
+            "principal_id",
+            unique=True,
+            postgresql_where=text("principal_id <> ''"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     agent_id: Mapped[str] = mapped_column(String(32), index=True)
@@ -90,6 +98,8 @@ class McpClient(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     revoked_reason: Mapped[str] = mapped_column(String(256), default="")
     created_by: Mapped[str] = mapped_column(String(80), default="")
+    capabilities: Mapped[list[str]] = mapped_column(JSON, default=list)
+    principal_id: Mapped[str] = mapped_column(String(80), default="")
 
 
 class McpPairingRequest(Base):
@@ -183,6 +193,58 @@ class TaskRouterJob(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class TaskWorkerJob(Base):
+    __tablename__ = "task_worker_jobs"
+    __table_args__ = (
+        Index(
+            "ux_task_worker_jobs_active_task",
+            "task_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'running')"),
+        ),
+        Index("ix_task_worker_jobs_client_status_available", "client_id", "status", "available_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id"), index=True)
+    client_id: Mapped[str] = mapped_column(ForeignKey("mcp_clients.id"), index=True)
+    principal_id: Mapped[str] = mapped_column(String(80), index=True)
+    task_version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16), default="pending", index=True)
+    attempt: Mapped[int] = mapped_column(Integer, default=0)
+    lease_generation: Mapped[int] = mapped_column(Integer, default=0)
+    lease_token_hash: Mapped[str] = mapped_column(String(64), default="")
+    acquired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_max_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    error_code: Mapped[str] = mapped_column(String(64), default="")
+    assigned_by: Mapped[str] = mapped_column(String(80), default="")
+    assignment_kind: Mapped[str] = mapped_column(String(32), default="operator")
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class TaskWorkerIdempotency(Base):
+    __tablename__ = "task_worker_idempotency"
+    __table_args__ = (
+        UniqueConstraint(
+            "job_id", "lease_generation", "operation", "idempotency_key",
+            name="uq_task_worker_idempotency_operation",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    job_id: Mapped[str] = mapped_column(ForeignKey("task_worker_jobs.id"), index=True)
+    lease_generation: Mapped[int] = mapped_column(Integer)
+    operation: Mapped[str] = mapped_column(String(16))
+    idempotency_key: Mapped[str] = mapped_column(String(36))
+    input_hash: Mapped[str] = mapped_column(String(64), default="")
+    result: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class TaskCheck(Base):
     __tablename__ = "task_checks"
 
@@ -250,6 +312,8 @@ class Approval(Base):
     # means the approval is not input-bound (legacy rows only).
     input_hash: Mapped[str] = mapped_column(String(64), default="")
     requested_by: Mapped[str] = mapped_column(String(64), default="")
+    worker_job_id: Mapped[str | None] = mapped_column(ForeignKey("task_worker_jobs.id"), nullable=True, index=True)
+    worker_lease_generation: Mapped[int | None] = mapped_column(Integer, nullable=True)
     decided_by: Mapped[str] = mapped_column(String(64), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

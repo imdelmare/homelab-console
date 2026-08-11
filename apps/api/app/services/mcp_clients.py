@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import get_settings
@@ -15,7 +15,9 @@ from app.db.models import McpClient, McpPairingRequest, utcnow
 from app.domain.actors import Actor
 from app.services.audit import write_audit
 
-VALID_MCP_AGENT_IDS = {"claude", "fixer", "codex", "cline", "opencode"}
+VALID_MCP_AGENT_IDS = {"claude", "fixer", "codex", "cline", "opencode", "worker"}
+TASK_WORKER_CAPABILITY = "task-worker.v1"
+VALID_MCP_CLIENT_CAPABILITIES = frozenset({TASK_WORKER_CAPABILITY})
 PAIRING_TTL_SECONDS = 300
 
 
@@ -47,7 +49,8 @@ def _clean_agent_id(agent_id: str) -> str:
     value = agent_id.strip().lower()
     if value not in VALID_MCP_AGENT_IDS:
         raise McpClientError(
-            "invalid_agent", "MCP agent must be one of: claude, fixer, codex, cline, opencode"
+            "invalid_agent",
+            "MCP agent must be one of: claude, fixer, codex, cline, opencode, worker",
         )
     return value
 
@@ -70,6 +73,7 @@ def _aware(value):
 
 
 def mcp_client_public(client: McpClient) -> dict:
+    capabilities = mcp_client_capabilities(client)
     return {
         "id": client.id,
         "agent_id": client.agent_id,
@@ -82,7 +86,91 @@ def mcp_client_public(client: McpClient) -> dict:
         "revoked_at": client.revoked_at,
         "revoked_reason": client.revoked_reason,
         "created_by": client.created_by,
+        "capabilities": list(capabilities),
+        "principal_id": mcp_client_actor(client).audit_id(),
     }
+
+
+def mcp_client_capabilities(client: McpClient) -> tuple[str, ...]:
+    raw = client.capabilities if isinstance(client.capabilities, list) else []
+    return tuple(sorted({value for value in raw if value in VALID_MCP_CLIENT_CAPABILITIES}))
+
+
+def mcp_client_has_capability(client: McpClient, capability: str) -> bool:
+    return capability in mcp_client_capabilities(client)
+
+
+def mcp_client_actor(client: McpClient) -> Actor:
+    actor_id = client.principal_id or client.agent_id
+    return Actor(
+        kind="agent",
+        id=actor_id,
+        label=client.client_label or f"MCP {client.agent_id}",
+    )
+
+
+def _validated_capabilities(capabilities: list[str]) -> list[str]:
+    normalized = sorted({value.strip().lower() for value in capabilities if value.strip()})
+    unknown = sorted(set(normalized) - VALID_MCP_CLIENT_CAPABILITIES)
+    if unknown:
+        raise McpClientError(
+            "invalid_capability",
+            f"unsupported MCP client capability: {unknown[0]}",
+        )
+    return normalized
+
+
+async def set_mcp_client_capabilities(
+    db: AsyncSession,
+    *,
+    client_id: str,
+    capabilities: list[str],
+    actor: Actor,
+    confirm_worker_conversion: bool = False,
+) -> McpClient:
+    client = await db.get(McpClient, client_id, with_for_update=True)
+    if client is None:
+        raise McpClientError("unknown_client", "unknown MCP client")
+    if client.revoked_at is not None:
+        raise McpClientError("client_revoked", "cannot update a revoked MCP client")
+
+    previous = list(mcp_client_capabilities(client))
+    updated = _validated_capabilities(capabilities)
+    if TASK_WORKER_CAPABILITY in updated and not client.principal_id:
+        if not confirm_worker_conversion:
+            raise McpClientError(
+                "worker_conversion_confirmation_required",
+                "converting an MCP registration to a worker principal requires explicit confirmation",
+            )
+        # Worker identity is permanent for this registration. Removing the
+        # capability disables work eligibility but must never downgrade the
+        # same bearer token into an interactive family identity.
+        client.principal_id = f"worker:{client.id}"
+    if TASK_WORKER_CAPABILITY in previous and TASK_WORKER_CAPABILITY not in updated:
+        from app.services.remediation_workers import disable_worker_client_jobs
+
+        await disable_worker_client_jobs(
+            db,
+            client=client,
+            actor=actor,
+            reason="worker_capability_revoked",
+        )
+    if updated != previous:
+        client.capabilities = updated
+        await write_audit(
+            db,
+            actor=actor,
+            source="rest",
+            action="mcp.client.capabilities.update",
+            outcome="success",
+            metadata={
+                "client_id": client.id,
+                "agent_id": client.agent_id,
+                "previous": previous,
+                "capabilities": updated,
+            },
+        )
+    return client
 
 
 def mcp_pairing_public(request: McpPairingRequest) -> dict:
@@ -309,10 +397,19 @@ async def revoke_mcp_client(
     reason: str,
     actor: Actor,
 ) -> McpClient:
-    client = await db.get(McpClient, client_id)
+    client = await db.get(McpClient, client_id, with_for_update=True)
     if client is None:
         raise McpClientError("unknown_client", "unknown MCP client")
     if client.revoked_at is None:
+        if client.principal_id.startswith("worker:"):
+            from app.services.remediation_workers import disable_worker_client_jobs
+
+            await disable_worker_client_jobs(
+                db,
+                client=client,
+                actor=actor,
+                reason="worker_client_revoked",
+            )
         client.revoked_at = utcnow()
         client.revoked_reason = reason[:256]
         await write_audit(
@@ -332,11 +429,18 @@ async def forget_mcp_client(
     client_id: str,
     actor: Actor,
 ) -> None:
-    client = await db.get(McpClient, client_id)
+    client = await db.get(McpClient, client_id, with_for_update=True)
     if client is None:
         raise McpClientError("unknown_client", "unknown MCP client")
     if client.revoked_at is None:
         raise McpClientError("client_not_revoked", "revoke the MCP client before forgetting it")
+    from app.db.models import TaskWorkerJob
+
+    has_worker_history = await db.scalar(
+        select(exists().where(TaskWorkerJob.client_id == client.id))
+    )
+    if has_worker_history:
+        raise McpClientError("client_has_worker_history", "worker clients with job history cannot be forgotten")
 
     metadata = {"client_id": client.id, "agent_id": client.agent_id}
     await db.delete(client)

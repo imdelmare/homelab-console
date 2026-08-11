@@ -155,6 +155,7 @@ The runtime limits are configurable through environment variables:
 
 | Setting | Default | Meaning |
 |---|---:|---|
+| `CONVERSATION_ENABLED` | `true` | Master gate; when false, no conversation, media analysis, Task Router worker or model-assisted incident matching is invoked |
 | `CONVERSATION_PROVIDER` | `ollama` | `ai_manager` for inventory-bound LAN inference with Luna fallback, `ollama` for local inference, `openai` for Luna only, or `opencode_go` for direct OpenCode Go inference |
 | `CONVERSATION_MODEL` | `gpt-5.6-luna` | OpenAI model used for conversation routing |
 | `OPENCODE_GO_API_KEY` | empty | Server-side OpenCode Go API key; never caller-visible or persisted |

@@ -17,7 +17,12 @@ from app.services.model_providers import seed_model_profiles
 from app.services.luna_metrics import backfill_llm_usage
 from app.services.notification_outbox import worker_loop as notification_worker_loop
 from app.services.ops_health import retention_loop
+from app.services.sentinel_heartbeat import (
+    validate_configuration as validate_sentinel_heartbeat,
+    worker_loop as sentinel_heartbeat_worker_loop,
+)
 from app.services.task_router_queue import worker_loop as task_router_worker_loop
+from app.services.remediation_workers import recovery_loop as remediation_worker_recovery_loop
 from app.services.watchers import watcher_scheduler_loop
 
 logger = logging.getLogger("homelab")
@@ -73,6 +78,8 @@ async def _bootstrap_admin() -> None:
 async def lifespan(app: FastAPI):
     settings = get_settings()
     _enforce_live_guards()
+    if settings.sentinel_heartbeat_enabled:
+        validate_sentinel_heartbeat()
     await init_db()
     async with get_session_factory()() as db:
         await seed_model_profiles(db)
@@ -82,9 +89,17 @@ async def lifespan(app: FastAPI):
     watcher_task = asyncio.create_task(watcher_scheduler_loop())
     notification_task = asyncio.create_task(notification_worker_loop())
     retention_task = asyncio.create_task(retention_loop())
-    task_router_task = (
-        asyncio.create_task(task_router_worker_loop()) if settings.task_router_enabled else None
+    sentinel_heartbeat_task = (
+        asyncio.create_task(sentinel_heartbeat_worker_loop())
+        if settings.sentinel_heartbeat_enabled
+        else None
     )
+    task_router_task = (
+        asyncio.create_task(task_router_worker_loop())
+        if settings.conversation_enabled and settings.task_router_enabled
+        else None
+    )
+    remediation_recovery_task = asyncio.create_task(remediation_worker_recovery_loop())
     try:
         yield
     finally:
@@ -110,6 +125,17 @@ async def lifespan(app: FastAPI):
                 await task_router_task
             except asyncio.CancelledError:
                 pass
+        if sentinel_heartbeat_task is not None:
+            sentinel_heartbeat_task.cancel()
+            try:
+                await sentinel_heartbeat_task
+            except asyncio.CancelledError:
+                pass
+        remediation_recovery_task.cancel()
+        try:
+            await remediation_recovery_task
+        except asyncio.CancelledError:
+            pass
 
 
 def create_app() -> FastAPI:

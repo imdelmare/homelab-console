@@ -336,7 +336,32 @@ async def test_rest_lists_and_revokes_mcp_clients(client, user, capture_adapter,
     body = listed.json()
     assert body[0]["agent_id"] == "codex"
     assert body[0]["token_hint"] == "abcd1234"
+    assert body[0]["capabilities"] == []
+    assert body[0]["principal_id"] == "agent:codex"
     assert "token_hash" not in body[0]
+
+    missing_capability_csrf = await client.put(
+        f"/api/mcp/clients/{body[0]['id']}/capabilities",
+        json={"capabilities": ["task-worker.v1"]},
+    )
+    assert missing_capability_csrf.status_code == 403
+
+    unconfirmed = await client.put(
+        f"/api/mcp/clients/{body[0]['id']}/capabilities",
+        json={"capabilities": ["task-worker.v1"]},
+        headers=headers,
+    )
+    assert unconfirmed.status_code == 409
+    assert unconfirmed.json()["detail"]["code"] == "worker_conversion_confirmation_required"
+
+    capability = await client.put(
+        f"/api/mcp/clients/{body[0]['id']}/capabilities",
+        json={"capabilities": ["task-worker.v1"], "confirm_worker_conversion": True},
+        headers=headers,
+    )
+    assert capability.status_code == 200, capability.text
+    assert capability.json()["capabilities"] == ["task-worker.v1"]
+    assert capability.json()["principal_id"] == f"agent:worker:{body[0]['id']}"
 
     revoked = await client.post(
         f"/api/mcp/clients/{body[0]['id']}/revoke",
@@ -454,3 +479,34 @@ async def test_mcp_pairing_history_is_authenticated_and_redacted(client, user, c
     assert body[0]["decided_by"] == "telegram:111"
     assert "pairing_secret_hash" not in body[0]
     assert "approve_nonce_hash" not in body[0]
+
+
+async def test_rest_assign_worker_requires_capability_and_claims_task(client, user, capture_adapter, db_session):
+    _, csrf = await do_login(client, capture_adapter)
+    headers = {"x-csrf-token": csrf}
+    worker = McpClient(
+        agent_id="codex", client_label="worker", host_fingerprint="worker",
+        token_hash="worker-hash", token_hint="worker",
+    )
+    db_session.add(worker)
+    await db_session.commit()
+    created = await client.post("/api/tasks", json={"title": "repair", "goal": "fix"}, headers=headers)
+    task = created.json()
+
+    denied = await client.post(
+        f"/api/tasks/{task['id']}/assign-worker",
+        json={"client_id": worker.id, "expected_version": task["version"]}, headers=headers,
+    )
+    assert denied.status_code == 403
+    assert denied.json()["detail"]["code"] == "worker_capability_required"
+
+    worker.capabilities = ["task-worker.v1"]
+    worker.principal_id = f"worker:{worker.id}"
+    await db_session.commit()
+    assigned = await client.post(
+        f"/api/tasks/{task['id']}/assign-worker",
+        json={"client_id": worker.id, "expected_version": task["version"]}, headers=headers,
+    )
+    assert assigned.status_code == 201, assigned.text
+    assert assigned.json()["task"]["assigned_agent"] == f"agent:worker:{worker.id}"
+    assert assigned.json()["job"]["client_id"] == worker.id

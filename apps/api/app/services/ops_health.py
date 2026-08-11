@@ -107,6 +107,8 @@ async def retention_loop() -> None:
 
 async def operational_health(db: AsyncSession) -> dict[str, Any]:
     settings = get_settings()
+    from app.services.sentinel_heartbeat import heartbeat_status
+
     notification_counts = (
         await db.execute(
             select(NotificationOutbox.status, func.count(NotificationOutbox.id)).group_by(NotificationOutbox.status)
@@ -144,6 +146,7 @@ async def operational_health(db: AsyncSession) -> dict[str, Any]:
             "notification_outbox_enabled": settings.notification_outbox_enabled,
             "notification_counts": {str(status): int(count) for status, count in notification_counts},
             "last_watcher_run": _watcher_public(last_watcher_run),
+            "sentinel_heartbeat": heartbeat_status(),
         },
         "provider_errors": [_provider_error_public(row) for row in provider_errors],
     }

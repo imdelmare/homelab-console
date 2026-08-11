@@ -116,6 +116,9 @@ async def handle_update(
         return None  # do not reply to strangers
 
     actor = _telegram_actor(user_id)
+    settings = get_settings()
+    if has_media and not settings.conversation_enabled:
+        return "Attachment analysis is disabled. Use /menu for operational commands."
     try:
         media = _telegram_media(message)
     except MediaAnalysisError:
@@ -154,6 +157,8 @@ async def handle_update(
     if command == "/mcp":
         return await _render_mcp(db, actor)
     if command == "/luna":
+        if not settings.conversation_enabled:
+            return "Conversation service is disabled. Use /menu for operational commands."
         return await _render_operations_shortcut(
             db, actor, "overview", chat_id=chat_id
         )
@@ -175,6 +180,9 @@ async def handle_update(
             "Unknown command. Use /menu or send me a question.",
             _home_keyboard(),
         )
+
+    if not settings.conversation_enabled:
+        return "Conversation service is disabled. Use /menu for operational commands."
 
     if on_conversation_start is not None:
         try:
@@ -367,6 +375,7 @@ async def _handle_callback(db: AsyncSession, callback: dict) -> str | dict | Non
         return None
 
     actor = _telegram_actor(user_id)
+    settings = get_settings()
 
     if data == "nav:home":
         return await _render_home(db, actor)
@@ -385,6 +394,11 @@ async def _handle_callback(db: AsyncSession, callback: dict) -> str | dict | Non
     if data == "nav:operations":
         return await _render_operations(db, actor)
     if data == "operations:ask":
+        if not settings.conversation_enabled:
+            return _reply(
+                "Conversation service is disabled.",
+                _operations_keyboard(),
+            )
         nonce = await create_operations_question(
             db,
             channel="telegram",

@@ -69,8 +69,15 @@ ALLOWED_TOOL_IDS = SUMMARY_TOOL_IDS | TASK_TOOL_IDS
 
 
 class ConversationError(Exception):
-    def __init__(self, message: str, *, telemetry: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "conversation_unavailable",
+        telemetry: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(message)
+        self.code = code
         self.telemetry = telemetry or {}
 
 
@@ -130,7 +137,9 @@ class ConversationTurnResult(BaseModel):
 class ConversationStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    enabled: bool
     configured: bool
+    reason: str = ""
     model: str
     max_turns: int
     max_tool_calls: int
@@ -722,7 +731,13 @@ def _fallback_telemetry(
 
 
 def get_conversation_model() -> ConversationModelAdapter:
-    provider = get_settings().conversation_provider.strip().lower()
+    settings = get_settings()
+    if not settings.conversation_enabled:
+        raise ConversationError(
+            "Conversation service is disabled",
+            code="conversation_disabled",
+        )
+    provider = settings.conversation_provider.strip().lower()
     if provider == "ai_manager":
         return AIManagerWithLunaFallbackModel()
     if provider == "ollama":
@@ -744,6 +759,11 @@ async def handle_free_chat_message(
 ) -> ConversationTurnResult:
     """Produce one bounded conversational reply without exposing any tool contract."""
 
+    if not get_settings().conversation_enabled:
+        raise ConversationError(
+            "Conversation service is disabled",
+            code="conversation_disabled",
+        )
     content = content.strip()
     if not content:
         raise ConversationError("message is empty")
@@ -795,6 +815,11 @@ async def handle_operations_shortcut(
 ) -> ConversationTurnResult:
     """Run one fixed summary tool, then use one model decision to explain its result."""
 
+    if not get_settings().conversation_enabled:
+        raise ConversationError(
+            "Conversation service is disabled",
+            code="conversation_disabled",
+        )
     if tool_id not in SUMMARY_TOOL_IDS:
         raise ConversationError("operations shortcut is not allowed")
     conversation = await _get_or_create_conversation(db, channel, user_ref, None, None)
@@ -1070,6 +1095,17 @@ def _openai_error_message(response: httpx.Response) -> str:
 
 def conversation_status() -> ConversationStatus:
     settings = get_settings()
+    if not settings.conversation_enabled:
+        return ConversationStatus(
+            enabled=False,
+            configured=False,
+            reason="conversation_disabled",
+            model="",
+            max_turns=settings.conversation_max_turns,
+            max_tool_calls=settings.conversation_max_tool_calls,
+            max_output_tokens=settings.conversation_max_output_tokens,
+            timeout_seconds=0,
+        )
     provider = settings.conversation_provider.strip().lower()
     use_ollama = provider == "ollama"
     use_opencode = provider == "opencode_go"
@@ -1089,6 +1125,7 @@ def conversation_status() -> ConversationStatus:
         )
     )
     return ConversationStatus(
+        enabled=True,
         configured=bool(
             ai_manager_configured()
             and settings.openai_api_key
@@ -1139,6 +1176,11 @@ async def handle_conversation_message(
     task_id: str | None = None,
     model: ConversationModelAdapter | None = None,
 ) -> ConversationTurnResult:
+    if not get_settings().conversation_enabled:
+        raise ConversationError(
+            "Conversation service is disabled",
+            code="conversation_disabled",
+        )
     content = content.strip()
     if not content:
         raise ConversationError("message is empty")

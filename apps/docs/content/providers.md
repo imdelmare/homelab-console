@@ -194,39 +194,6 @@ The API driver reports whether the connector is healthy at Cloudflare's edge.
 It deliberately does not replace Uptime Kuma, which verifies whether each
 published application actually responds.
 
-### Home Speedtest probe
-
-The `speedtest_probe_v1` driver starts a fresh measurement on the dedicated
-probe deployed on a home-network host:
-
-```yaml
-api_provider_instances:
-  - id: home_speedtest
-    name: Home Speedtest
-    driver: speedtest_probe_v1
-    base_url: http://192.0.2.10:8780
-    verify_tls: true
-    timeout_seconds: 140
-```
-
-Its bearer token is stored as `home_speedtest.bearer_token` in
-`config/secrets.local.yml`. The resulting tool is
-`home_speedtest.speedtest.run`. It always requests `POST /v1/tests/run`;
-callers cannot select a URL, server, command or CLI argument. The adapter
-discards non-allowlisted probe fields. The tool is read-mode but medium-risk
-because each invocation consumes significant bandwidth, so its exact ID must
-be present in `policy.allow_medium_risk` before live calls are enabled.
-
-The probe is built from `deploy/Dockerfile.speedtest-probe` and deployed with
-`deploy/docker-compose.speedtest-probe.yml`. The repository does not download
-or redistribute Ookla Speedtest CLI: an operator permitted by the vendor's
-separate terms must place its executable at the gitignored
-`local-assets/speedtest` path before building the private-use image. The probe
-runs that one fixed command only after an authenticated request, rejects
-concurrent tests and exposes no generic command endpoint. Do not redistribute
-the resulting image without separate permission from the CLI vendor. Keep port
-8780 private to the trusted LAN/WireGuard path.
-
 These are compatibility profiles, not generic HTTP providers. A system needing
 richer or vendor-specific capabilities still gets dedicated narrow tools.
 

@@ -24,6 +24,7 @@ class BaseJsonClient:
         self.headers: dict[str, str] = {}
         self.verify_tls: bool = True
         self.timeout_seconds: float = 8.0
+        self.trust_env: bool = True
 
     def is_configured(self) -> bool:
         return bool(self.base_url)
@@ -68,6 +69,7 @@ class BaseJsonClient:
                 timeout=timeout or self.timeout_seconds,
                 auth=self.auth,
                 headers=self.headers or None,
+                trust_env=self.trust_env,
             ) as client:
                 response = await client.request(
                     method, url, json=json_body if json_body is not None else None

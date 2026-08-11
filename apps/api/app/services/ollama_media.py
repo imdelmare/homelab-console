@@ -16,6 +16,8 @@ class MediaAnalysisError(Exception):
 
 
 async def analyze_image(data: bytes, prompt: str) -> str:
+    if not get_settings().conversation_enabled:
+        raise MediaAnalysisError("conversation service is disabled")
     if not _is_supported_image(data):
         raise MediaAnalysisError("unsupported image format")
     return await _analyze_media(
@@ -26,6 +28,8 @@ async def analyze_image(data: bytes, prompt: str) -> str:
 
 
 async def analyze_audio(data: bytes, prompt: str) -> str:
+    if not get_settings().conversation_enabled:
+        raise MediaAnalysisError("conversation service is disabled")
     wav = _audio_to_wav(data)
     return await _analyze_media(
         wav,

@@ -187,6 +187,36 @@ async def test_operator_handoff_rejects_offline_client_without_changing_task(db_
     assert task.version == version
 
 
+async def test_operator_handoff_rejects_worker_registration_without_job(db_session):
+    task = await create_task(db_session, "manual task", "worker handoff", OPERATOR)
+    client = McpClient(
+        agent_id="codex",
+        client_label="remediation worker",
+        host_fingerprint="worker-host",
+        token_hash="hash-worker-handoff",
+        last_seen_at=utcnow(),
+        capabilities=["task-worker.v1"],
+        principal_id="worker:11111111-1111-4111-8111-111111111111",
+    )
+    db_session.add(client)
+    await db_session.flush()
+    await claim_task_as_operator(db_session, task.id, OPERATOR)
+    version = task.version
+
+    with pytest.raises(TaskServiceError) as exc:
+        await handoff_operator_task_to_client(
+            db_session,
+            task.id,
+            client.id,
+            "worker assignment must use a durable job",
+            OPERATOR,
+            expected_version=version,
+        )
+    assert exc.value.code == "worker_client_requires_assignment"
+    assert task.assigned_agent == "user:operator"
+    assert task.version == version
+
+
 async def test_operator_completion_records_human_resolution(db_session):
     task = await create_task(db_session, "manual task", "complete", OPERATOR)
     await db_session.flush()

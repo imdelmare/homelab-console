@@ -1,6 +1,7 @@
 from datetime import timedelta
 from types import SimpleNamespace
 
+from app.core.settings import get_settings
 from app.db.models import Approval, utcnow
 from app.db.session import get_session_factory
 from app.services.mcp_clients import start_pairing
@@ -171,6 +172,60 @@ async def test_unauthorized_media_is_not_analyzed(db_session, monkeypatch):
 
     assert reply is None
     assert called is False
+
+
+async def test_conversation_gate_blocks_media_before_analysis(db_session, monkeypatch):
+    monkeypatch.setattr(get_settings(), "conversation_enabled", False)
+    called = False
+
+    async def fake_analyze(_media, _caption):
+        nonlocal called
+        called = True
+        return "must not run"
+
+    monkeypatch.setattr("app.services.telegram_service._analyze_telegram_media", fake_analyze)
+
+    reply = await handle_update(db_session, _photo_message())
+
+    assert reply == "Attachment analysis is disabled. Use /menu for operational commands."
+    assert called is False
+
+
+async def test_conversation_gate_keeps_commands_and_blocks_free_text(db_session, monkeypatch):
+    monkeypatch.setattr(get_settings(), "conversation_enabled", False)
+
+    async def must_not_run(*_args, **_kwargs):
+        raise AssertionError("conversation must not run")
+
+    monkeypatch.setattr("app.services.telegram_service.handle_free_chat_message", must_not_run)
+
+    free_text = await handle_update(db_session, _message("Come sta il lab?"))
+    menu = await handle_update(db_session, _message("/menu"))
+
+    assert free_text == "Conversation service is disabled. Use /menu for operational commands."
+    assert isinstance(menu, dict)
+
+
+async def test_conversation_gate_does_not_create_operations_question(db_session, monkeypatch):
+    monkeypatch.setattr(get_settings(), "conversation_enabled", False)
+
+    async def must_not_run(*_args, **_kwargs):
+        raise AssertionError("operations question must not be created")
+
+    monkeypatch.setattr("app.services.telegram_service.create_operations_question", must_not_run)
+    reply = await handle_update(
+        db_session,
+        {
+            "callback_query": {
+                "from": {"id": "111"},
+                "message": {"chat": {"id": "222"}},
+                "data": "operations:ask",
+            }
+        },
+    )
+
+    assert isinstance(reply, dict)
+    assert reply["text"] == "Conversation service is disabled."
 
 
 async def test_provider_switch_from_telegram(client, db_session, monkeypatch):
