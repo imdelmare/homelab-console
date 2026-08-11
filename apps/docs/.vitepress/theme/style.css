@@ -72,24 +72,10 @@ body {
 .VPNavBarTitle .title {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
   font-family: var(--hc-font-display);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
-}
-
-.VPNavBarTitle .title::before {
-  width: 31px;
-  height: 31px;
-  display: grid;
-  place-items: center;
-  color: var(--vp-c-bg);
-  background: var(--vp-c-text-1);
-  content: "H";
-  font-family: var(--hc-font-display);
-  font-size: 17px;
-  line-height: 1;
 }
 
 .VPNavBarMenuLink {
@@ -440,12 +426,6 @@ body {
 }
 
 @media (max-width: 640px) {
-  .VPNavBarTitle .title::before {
-    width: 27px;
-    height: 27px;
-    font-size: 15px;
-  }
-
   .VPHomeHero .text {
     font-size: clamp(52px, 16vw, 76px);
   }
