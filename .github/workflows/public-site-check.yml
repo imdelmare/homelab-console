@@ -43,7 +43,7 @@ jobs:
               "private ISP label": re.compile(r"\b(?:Fastweb|Iliad)\b", re.I),
               "private organization": re.compile(r"Grafiche\s+Delmare", re.I),
               "private source repository": re.compile(
-                  r"github\.com/imdelmare/homelab-console(?!-sentinel|-remediation-worker)",
+                  r"github\.com/imdelmare/homelab-console-private",
                   re.I,
               ),
               "local workstation path": re.compile(r"/home/delmare(?:/|\b)", re.I),

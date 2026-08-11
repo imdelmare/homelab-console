@@ -55,7 +55,7 @@ upgrade guidance.
 
 ## Documentation
 
-- [Field manual](https://imdelmare.github.io/homelab-mcp/docs/)
+- [Field manual](https://imdelmare.github.io/homelab-console/docs/)
 - [Architecture](docs/architecture.md)
 - [Security model](docs/security.md)
 - [MCP adapter](docs/mcp.md)
