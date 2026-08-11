@@ -3,43 +3,47 @@ layout: home
 
 hero:
   name: "Homelab Console"
-  text: "The operator's field manual"
-  tagline: Build a governed control plane where humans, automation, and AI agents share one narrow, auditable tool surface.
+  text: "Run your homelab with a small local AI"
+  tagline: Private, local reasoning over typed tools, bounded context, operator approvals, and one auditable execution core. No cloud AI required.
   actions:
     - theme: brand
-      text: See the product
-      link: /product-tour
-    - theme: alt
-      text: Start here
+      text: Start locally
       link: /getting-started
+    - theme: alt
+      text: See how it works
+      link: /product-tour
 
 features:
-  - title: One execution core
-    details: REST, Telegram, watchers, and MCP clients all pass through the same validation, policy, redaction, and audit pipeline.
-  - title: Bring your own agent
-    details: Connect Claude, Codex, OpenCode, or Cline with a per-client identity and a revocable token.
+  - title: Local-first reasoning
+    details: Use Ollama or an inventory-bound OpenAI-compatible model on your private LAN. Cloud models are optional.
+  - title: Built for smaller models
+    details: Compact observations, strict schemas, persistent tasks, and authored runbooks reduce the reasoning burden.
+  - title: No direct authority
+    details: Models never receive provider credentials. Every infrastructure call passes through validation, policy, redaction, and audit.
   - title: Humans approve writes
     details: Every infrastructure write is narrow, input-bound, single-use, and explicitly approved by the operator.
-  - title: Your stack, normalized
-    details: Proxmox, OPNsense, Home Assistant, Frigate, AdGuard, Cloudflare, and more become typed provider observations.
 ---
 
-## A control plane, not a remote shell
+## Better tools, not more privileges
 
-Homelab Console is designed around one constraint: an AI agent should be useful
-without becoming an unbounded administrator. The tool catalog contains named,
-typed capabilities instead of arbitrary commands, URLs, or provider payloads.
+A lightweight model should not need SSH access or an enormous context window to
+answer an operational question. Homelab Console turns different providers into
+predictable typed observations, preserves investigation state outside the chat,
+and validates every decision before execution.
 
-Use this manual to understand the trust boundaries, deploy your own instance,
-connect an MCP client, and extend the provider catalog without weakening the
-execution contract.
+The model remains replaceable. Infrastructure knowledge, credentials, task
+state, approvals, and authority remain in the control plane.
 
-## From signal to audited action
+## From a local question to an audited action
 
 [![Homelab Console overview with synthetic provider, incident, task, MCP, and watcher data.](/product-tour/overview.webp)](/product-tour)
 
-Follow a synthetic incident through evidence collection, an input-bound
+Follow a synthetic incident through bounded evidence collection, an input-bound
 approval, and the final audit trail in the [product tour](./product-tour.md).
+
+When you need another interface, MCP remains available for authenticated Claude,
+Codex, OpenCode, Cline, and other compatible clients. They use the same tools and
+policy as local reasoning, Telegram, REST, and watchers.
 
 ::: tip SOURCE OF TRUTH
 These pages are generated from the Markdown documentation maintained beside the
