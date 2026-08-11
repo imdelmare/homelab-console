@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Homelab Console is an AI-native control plane with typed tools, operator-approved writes, and one shared execution core."
+      content="Run your homelab privately with a small local AI. Homelab Console gives lightweight models typed tools, bounded context, approvals, and audit."
     />
     <meta name="theme-color" content="#007f7f" />
     <meta property="og:title" content="Homelab Console" />
     <meta
       property="og:description"
-      content="Observe your homelab. Keep humans in control."
+      content="The infrastructure layer that makes small local AI useful. No cloud AI required."
     />
     <meta property="og:type" content="website" />
-    <title>Homelab Console | AI-native control plane</title>
+    <title>Homelab Console | Run your homelab with local AI</title>
     <style>
       :root {
         color-scheme: light;
@@ -905,84 +905,83 @@
           </div>
           <div class="window-body hero-grid">
             <div>
-              <div class="eyebrow"><span class="status-dot"></span> Reference control plane</div>
-              <h1 id="hero-title">Observe everything.<span>Keep humans in control.</span></h1>
+              <div class="eyebrow"><span class="status-dot"></span> Local-first homelab control plane</div>
+              <h1 id="hero-title">Run your homelab with a small local AI.<span>Privately.</span></h1>
               <p class="hero-copy">
-                Connect Claude, Codex, OpenCode, or Cline as authenticated MCP clients. They all
-                inspect infrastructure through the same typed, auditable tools, while every write
-                remains narrow, reviewed, and explicitly approved.
+                Homelab Console gives lightweight models the structured tools and bounded context
+                they need to understand, diagnose, and safely operate your infrastructure. Run
+                locally without sending homelab data to OpenAI or Anthropic.
               </p>
               <div class="button-row">
-                <a class="button" href="#planes">Explore Architecture</a>
-                <a class="button button-primary" href="./docs/">Read the Docs</a>
+                <a class="button button-primary" href="./docs/getting-started">Run locally</a>
+                <a class="button" href="#small-models">See how it works</a>
                 <a class="button" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">GitHub</a>
               </div>
             </div>
             <div class="system-card" aria-hidden="true">
-              <strong>HOMELAB CONSOLE</strong><br />
-              Secure MCP session
+              <strong>SMALL LOCAL MODEL</strong><br />
+              Gemma / Qwen / Llama
               <div class="terminal-prompt terminal-command terminal-row">
-                C:\CONTROL&gt; codex use browser-mcp
+                C:\LOCAL-AI&gt; diagnose home assistant
               </div>
-              <div class="terminal-line terminal-row"><span class="terminal-mcp">[MCP]</span><span>connecting client</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>identity authenticated</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-mcp">[MCP]</span><span>browser.navigate /docs</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>page loaded</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-mcp">[MCP]</span><span>browser.snapshot</span></div>
-              <div class="terminal-line terminal-row"><span class="terminal-safe">[SAFE]</span><span>read-only session</span></div>
-              <div class="terminal-prompt terminal-ready terminal-row">C:\CONTROL&gt; ready</div>
+              <div class="terminal-line terminal-row"><span class="terminal-mcp">[HC]</span><span>bounded context loaded</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>typed tool selected</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-mcp">[HC]</span><span>provider state normalized</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-ok">[OK]</span><span>diagnosis validated</span></div>
+              <div class="terminal-line terminal-row"><span class="terminal-safe">[SAFE]</span><span>writes require approval</span></div>
+              <div class="terminal-prompt terminal-ready terminal-row">C:\LOCAL-AI&gt; cloud APIs used: none</div>
             </div>
             <p class="sr-only">
-              Codex connects through browser MCP, authenticates its identity, opens the documentation,
-              captures a browser snapshot, and completes a safe read-only session.
+              A small local model receives bounded context, selects a typed tool, reads normalized
+              provider state, and produces a validated diagnosis. No cloud AI API is used.
             </p>
           </div>
         </section>
 
-        <section class="section" id="planes" aria-labelledby="planes-title">
+        <section class="section" id="small-models" aria-labelledby="small-models-title">
           <div class="section-heading">
-            <h2 id="planes-title">Five planes. One core.</h2>
-            <p>Each layer has a distinct job and a deliberately limited trust boundary.</p>
+            <h2 id="small-models-title">Small models need better tools.</h2>
+            <p>Not more parameters. Not more privileges. A smaller problem with predictable boundaries.</p>
           </div>
           <div class="plane-grid">
             <article class="window plane">
-              <div class="titlebar">Control Plane</div>
+              <div class="titlebar">Typed Tools</div>
               <div class="window-body">
                 <span class="plane-number">01</span>
-                <h3>The canonical state</h3>
-                <p>Inventory, identities, tasks, approvals, configuration, and a durable audit trail.</p>
+                <h3>Predictable choices</h3>
+                <p>Named capabilities and strict schemas replace arbitrary commands, URLs, and raw APIs.</p>
               </div>
             </article>
             <article class="window plane">
-              <div class="titlebar">Tool Plane</div>
+              <div class="titlebar">Bounded Context</div>
               <div class="window-body">
                 <span class="plane-number">02</span>
-                <h3>Narrow by default</h3>
-                <p>Explicit, typed capabilities instead of arbitrary shell, SSH, HTTP, or raw APIs.</p>
+                <h3>Only what matters</h3>
+                <p>Compact summaries and task evidence reduce the context a lightweight model must reason over.</p>
               </div>
             </article>
             <article class="window plane">
-              <div class="titlebar">Model Plane</div>
+              <div class="titlebar">Validation</div>
               <div class="window-body">
                 <span class="plane-number">03</span>
-                <h3>Reasoning without privilege</h3>
-                <p>Models receive bounded, redacted context and never hold infrastructure credentials.</p>
+                <h3>Untrusted output</h3>
+                <p>Every model decision is schema-checked before it can reach a tool or mutate task state.</p>
               </div>
             </article>
             <article class="window plane">
-              <div class="titlebar">Watcher Plane</div>
+              <div class="titlebar">Persistent Tasks</div>
               <div class="window-body">
                 <span class="plane-number">04</span>
-                <h3>Detect, deduplicate, report</h3>
-                <p>Scheduled read-only observations create incidents and tasks without executing fixes.</p>
+                <h3>Reasoning that survives chat</h3>
+                <p>Findings, checks, ownership, and history remain canonical outside the model conversation.</p>
               </div>
             </article>
             <article class="window plane">
-              <div class="titlebar">Operator Plane</div>
+              <div class="titlebar">Human Authority</div>
               <div class="window-body">
                 <span class="plane-number">05</span>
-                <h3>Human authority</h3>
-                <p>Web desktop, Telegram, and authenticated MCP clients share one governed surface.</p>
+                <h3>Safe remediation</h3>
+                <p>Models can request exact actions. Only the operator can approve an infrastructure write.</p>
               </div>
             </article>
           </div>
@@ -990,27 +989,54 @@
 
         <section class="section" aria-labelledby="pipeline-title">
           <div class="section-heading">
-            <h2 id="pipeline-title">One execution path.</h2>
-            <p>REST, MCP, Telegram, and watchers terminate in the same guarded function.</p>
+            <h2 id="pipeline-title">Local reasoning. Governed execution.</h2>
+            <p>The model is replaceable. Infrastructure knowledge, state, policy, and authority stay in Homelab Console.</p>
           </div>
           <div class="window pipeline-window">
-            <div class="titlebar">execute_tool</div>
+            <div class="titlebar">Small model → Homelab Console → Homelab</div>
             <div class="window-body pipeline">
-              <div class="pipeline-step"><strong>Lookup</strong><small>registry</small></div>
-              <div class="pipeline-step"><strong>Validate</strong><small>Pydantic</small></div>
-              <div class="pipeline-step"><strong>Authenticate</strong><small>actor</small></div>
-              <div class="pipeline-step"><strong>Authorize</strong><small>policy</small></div>
-              <div class="pipeline-step"><strong>Invoke</strong><small>provider</small></div>
-              <div class="pipeline-step"><strong>Redact</strong><small>secrets</small></div>
-              <div class="pipeline-step"><strong>Record</strong><small>audit</small></div>
+              <div class="pipeline-step"><strong>Ask</strong><small>operator intent</small></div>
+              <div class="pipeline-step"><strong>Context</strong><small>bounded state</small></div>
+              <div class="pipeline-step"><strong>Reason</strong><small>local model</small></div>
+              <div class="pipeline-step"><strong>Validate</strong><small>typed decision</small></div>
+              <div class="pipeline-step"><strong>Execute</strong><small>shared core</small></div>
+              <div class="pipeline-step"><strong>Approve</strong><small>writes only</small></div>
+              <div class="pipeline-step"><strong>Record</strong><small>task + audit</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="workflow-title">
+          <div class="section-heading">
+            <h2 id="workflow-title">A diagnosis, not a science project.</h2>
+            <p>An illustrative governed workflow for a common homelab failure.</p>
+          </div>
+          <div class="window">
+            <div class="titlebar">Incident - Home Assistant stopped responding</div>
+            <div class="window-body trust-grid">
+              <ol class="checklist">
+                <li><strong>Ask locally.</strong> “Why is Home Assistant down?”</li>
+                <li><strong>Collect evidence.</strong> A typed status tool reports the service unreachable.</li>
+                <li><strong>Follow the dependency.</strong> Proxmox reports the declared LXC is stopped.</li>
+                <li><strong>Propose, never assume.</strong> The reasoning layer identifies one exact start operation; a governed client requests it.</li>
+                <li><strong>Verify.</strong> After operator approval, the console starts the LXC and checks health again.</li>
+              </ol>
+              <div class="approval-dialog" aria-label="Illustrative local AI workflow properties">
+                <div class="approval-title">
+                  <span class="status-dot" aria-hidden="true"></span>
+                  Local-first by design
+                </div>
+                <div class="approval-code">reasoning: local model<br />cloud AI required: no<br />credentials exposed to model: none<br />write authority: operator only</div>
+                <p>The model reasons. Homelab Console owns infrastructure access, validation, approval, and read-back.</p>
+              </div>
             </div>
           </div>
         </section>
 
         <section class="section" id="security" aria-labelledby="security-title">
           <div class="section-heading">
-            <h2 id="security-title">Safety is architecture.</h2>
-            <p>Agents can request actions. Only the operator can authorize a write.</p>
+            <h2 id="security-title">Small, imperfect, safely constrained.</h2>
+            <p>Local models can be useful because they never receive direct infrastructure authority.</p>
           </div>
           <div class="window">
             <div class="titlebar">Security Properties</div>
@@ -1067,39 +1093,39 @@
 
         <section class="section" id="agents" aria-labelledby="agents-title">
           <div class="section-heading">
-            <h2 id="agents-title">Bring your own AI agent.</h2>
-            <p>Use the MCP client you already work with. Homelab Console keeps the policy.</p>
+            <h2 id="agents-title">Local first. Cloud optional.</h2>
+            <p>Choose the reasoning runtime without changing the infrastructure control plane.</p>
           </div>
           <div class="window">
-            <div class="titlebar">MCP Client Setup</div>
+            <div class="titlebar">Replaceable Reasoning</div>
             <div class="window-body">
               <div class="agent-grid">
                 <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">CL</span>
-                  <h3>Claude</h3>
-                  <p>Connect Claude as an external MCP agent over stdio or authenticated HTTP.</p>
+                  <span class="agent-mark" aria-hidden="true">OL</span>
+                  <h3>Ollama</h3>
+                  <p>Use the built-in fixed-endpoint adapter for private, read-oriented conversation and bounded operations reasoning.</p>
                 </article>
                 <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">CX</span>
-                  <h3>Codex</h3>
-                  <p>Give Codex the same governed tool catalog and persistent task context.</p>
+                  <span class="agent-mark" aria-hidden="true">LC</span>
+                  <h3>llama.cpp</h3>
+                  <p>Run an OpenAI-compatible model server on a declared private host with an inventory-bound endpoint.</p>
                 </article>
                 <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">OC</span>
-                  <h3>OpenCode</h3>
-                  <p>Pair OpenCode with its own identity, token, audit trail, and task ownership.</p>
+                  <span class="agent-mark" aria-hidden="true">LA</span>
+                  <h3>More local runtimes</h3>
+                  <p>LM Studio and vLLM compatibility is on the validation roadmap; tested support will be published with evidence.</p>
                 </article>
                 <article class="agent-card">
-                  <span class="agent-mark" aria-hidden="true">CN</span>
-                  <h3>Cline</h3>
-                  <p>Use Cline against the identical MCP surface without exposing provider secrets.</p>
+                  <span class="agent-mark" aria-hidden="true">MCP</span>
+                  <h3>External agents</h3>
+                  <p>Claude, Codex, OpenCode, and Cline remain optional clients of the same governed MCP surface.</p>
                 </article>
               </div>
-              <div class="mcp-path" aria-label="MCP client connection flow">
-                <div class="mcp-step"><strong>Choose a client</strong><span>Claude, Codex, OpenCode, or Cline</span></div>
-                <div class="mcp-step"><strong>Request pairing</strong><span>The operator receives it on Telegram</span></div>
-                <div class="mcp-step"><strong>Receive a token</strong><span>Individual, revocable client identity</span></div>
-                <div class="mcp-step"><strong>Discover tools</strong><span>Only enabled, governed capabilities</span></div>
+              <div class="mcp-path" aria-label="Shared control-plane interfaces">
+                <div class="mcp-step"><strong>Local model</strong><span>Reason over bounded context</span></div>
+                <div class="mcp-step"><strong>MCP clients</strong><span>Use authenticated typed tools</span></div>
+                <div class="mcp-step"><strong>Telegram + REST</strong><span>Reach the same policies</span></div>
+                <div class="mcp-step"><strong>execute_tool()</strong><span>Validate, redact, audit</span></div>
               </div>
             </div>
           </div>
@@ -1132,10 +1158,10 @@
         <section class="section window final-window" aria-labelledby="final-title">
           <div class="titlebar">Homelab Console - Ready</div>
           <div class="window-body">
-            <h2 id="final-title">Give agents tools.<br />Never give away control.</h2>
-            <p>Explore the source, deploy your own control plane, and pair your preferred MCP agent.</p>
+            <h2 id="final-title">Make a smaller model useful.<br />Keep your homelab private.</h2>
+            <p>Run the control plane locally, connect your infrastructure, and choose the reasoning runtime that fits your hardware.</p>
             <div class="button-row">
-              <a class="button" href="./docs/">Read the Field Manual</a>
+              <a class="button" href="./docs/getting-started">Start locally</a>
               <a class="button button-primary" href="https://github.com/imdelmare/homelab-mcp" target="_blank" rel="noopener noreferrer">Get Homelab Console on GitHub</a>
             </div>
           </div>
