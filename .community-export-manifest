@@ -294,6 +294,10 @@ apps/docs/content/sentinel.md
 apps/docs/content/watchers.md
 apps/docs/package-lock.json
 apps/docs/package.json
+apps/docs/public/product-tour/approvals.webp
+apps/docs/public/product-tour/audit.webp
+apps/docs/public/product-tour/overview.webp
+apps/docs/public/product-tour/task-evidence.webp
 apps/docs/scripts/assemble-pages.mjs
 apps/mcp/requirements.txt
 apps/mcp/server.py
