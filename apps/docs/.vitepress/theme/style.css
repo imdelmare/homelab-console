@@ -1,175 +1,326 @@
 :root {
-  --vp-c-brand-1: #060084;
-  --vp-c-brand-2: #0046a8;
-  --vp-c-brand-3: #007f7f;
-  --vp-c-brand-soft: rgba(6, 0, 132, 0.11);
-  --vp-c-bg: #e9edeb;
-  --vp-c-bg-alt: #d9dfdd;
-  --vp-c-bg-elv: #f8faf7;
-  --vp-c-bg-soft: #dfe5e2;
-  --vp-c-text-1: #111719;
-  --vp-c-text-2: #465052;
-  --vp-c-divider: #9ba8a5;
-  --vp-font-family-base: Tahoma, "Segoe UI", sans-serif;
-  --vp-font-family-mono: "IBM Plex Mono", "Cascadia Code", monospace;
+  --vp-c-brand-1: #dc4b2f;
+  --vp-c-brand-2: #b83a24;
+  --vp-c-brand-3: #285c42;
+  --vp-c-brand-soft: rgb(220 75 47 / 12%);
+  --vp-c-bg: #f1eee5;
+  --vp-c-bg-alt: #e9e5da;
+  --vp-c-bg-elv: #faf8f2;
+  --vp-c-bg-soft: #faf8f2;
+  --vp-c-text-1: #191914;
+  --vp-c-text-2: #6f6c63;
+  --vp-c-text-3: #8f8b82;
+  --vp-c-divider: #d2cdc0;
+  --vp-font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --vp-font-family-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --hc-font-display: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --hc-dark: #20211d;
+  --hc-surface: #faf8f2;
+  --hc-line-dark: #41423c;
+  --hc-success: #285c42;
   --vp-layout-max-width: 1500px;
-  --hc-surface: #c8cecc;
-  --hc-surface-light: #f8faf7;
-  --hc-shadow: #697472;
-  --hc-blue: #060084;
-  --hc-blue-light: #1084d0;
+  --vp-nav-bg-color: rgb(241 238 229 / 96%);
+  --vp-sidebar-bg-color: #f1eee5;
 }
 
 .dark {
-  --vp-c-brand-1: #8ec5ff;
-  --vp-c-brand-2: #6fb6ff;
-  --vp-c-brand-3: #5ed7cf;
-  --vp-c-brand-soft: rgba(94, 215, 207, 0.13);
-  --vp-c-bg: #0d1316;
-  --vp-c-bg-alt: #151d20;
-  --vp-c-bg-elv: #1d272b;
-  --vp-c-bg-soft: #182125;
-  --vp-c-text-1: #eef5f2;
-  --vp-c-text-2: #b9c7c4;
-  --vp-c-divider: #40504f;
-  --hc-surface: #1d272b;
-  --hc-surface-light: #536361;
-  --hc-shadow: #050708;
-  --hc-blue: #113a96;
-  --hc-blue-light: #1676ad;
+  --vp-c-brand-1: #ff8a70;
+  --vp-c-brand-2: #ffad9b;
+  --vp-c-brand-3: #8ac2a0;
+  --vp-c-brand-soft: rgb(255 138 112 / 14%);
+  --vp-c-bg: #20211d;
+  --vp-c-bg-alt: #191a17;
+  --vp-c-bg-elv: #292a25;
+  --vp-c-bg-soft: #292a25;
+  --vp-c-text-1: #f1eee5;
+  --vp-c-text-2: #aaa79d;
+  --vp-c-text-3: #858279;
+  --vp-c-divider: #41423c;
+  --hc-dark: #141510;
+  --hc-surface: #292a25;
+  --hc-line-dark: #4e5049;
+  --hc-success: #8ac2a0;
+  --vp-nav-bg-color: rgb(32 33 29 / 96%);
+  --vp-sidebar-bg-color: #20211d;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  color: var(--vp-c-bg);
+  background: var(--vp-c-text-1);
+}
+
+.VPNav {
+  border-bottom: 1px solid var(--vp-c-divider);
 }
 
 .VPNavBar {
-  border-bottom: 2px solid var(--vp-c-text-1) !important;
-  background: color-mix(in srgb, var(--hc-surface) 96%, transparent) !important;
-  box-shadow: inset 0 1px 0 var(--hc-surface-light);
+  background: var(--vp-nav-bg-color) !important;
+}
+
+.VPNavBar.has-sidebar .content-body {
+  background: transparent !important;
 }
 
 .VPNavBarTitle .title {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  font-family: var(--vp-font-family-mono);
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  gap: 11px;
+  font-family: var(--hc-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .VPNavBarTitle .title::before {
-  width: 12px;
-  height: 12px;
-  border: 1px solid var(--vp-c-text-1);
-  background: linear-gradient(135deg, #ffdd33 0 48%, var(--hc-blue) 49% 100%);
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.8);
-  content: "";
-}
-
-.DocSearch-Button {
-  border: 2px solid !important;
-  border-color: var(--hc-shadow) var(--hc-surface-light) var(--hc-surface-light) var(--hc-shadow) !important;
-  border-radius: 0 !important;
-  background: var(--vp-c-bg-elv) !important;
-  box-shadow: inset 1px 1px 0 color-mix(in srgb, var(--hc-shadow) 45%, transparent);
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  color: var(--vp-c-bg);
+  background: var(--vp-c-text-1);
+  content: "H";
+  font-family: var(--hc-font-display);
+  font-size: 17px;
+  line-height: 1;
 }
 
 .VPNavBarMenuLink {
-  min-height: 30px;
-  padding: 0 9px !important;
-  font-family: var(--vp-font-family-mono);
-  font-size: 12px !important;
-  text-transform: uppercase;
+  min-height: 36px;
+  padding: 0 10px !important;
+  color: var(--vp-c-text-2) !important;
+  font-size: 11px !important;
+  font-weight: 650;
 }
 
 .VPNavBarMenuLink:hover,
 .VPNavBarMenuLink.active {
-  color: #fff !important;
-  background: var(--hc-blue);
+  color: var(--vp-c-brand-1) !important;
+}
+
+.VPSocialLink,
+.VPNavBarAppearance .VPSwitch,
+.VPFlyout .button {
+  border-radius: 0 !important;
+}
+
+.DocSearch-Button {
+  border: 0 !important;
+  border-bottom: 1px solid var(--vp-c-divider) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-family: var(--vp-font-family-mono);
+  font-size: 10px;
 }
 
 .VPSidebar {
-  background: color-mix(in srgb, var(--vp-c-bg-alt) 94%, transparent) !important;
-  border-right: 2px solid var(--vp-c-text-1);
-  box-shadow: inset -1px 0 0 var(--hc-surface-light);
+  border-right: 1px solid var(--vp-c-divider);
+  background: var(--vp-sidebar-bg-color) !important;
 }
 
-.VPSidebarItem .text {
-  font-size: 13px;
+.VPSidebarItem.level-0 {
+  padding-bottom: 14px;
 }
 
 .VPSidebarItem.level-0 > .item > .text {
-  color: var(--vp-c-text-1);
+  color: var(--vp-c-text-3);
   font-family: var(--vp-font-family-mono);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
+.VPSidebarItem.level-1 .text {
+  font-size: 12px;
+}
+
+.VPSidebarItem.level-1 > .item {
+  min-height: 36px;
+  padding: 0 8px;
+}
+
+.VPSidebarItem.is-active > .item {
+  background: var(--vp-c-bg-elv);
+  box-shadow: inset 2px 0 var(--vp-c-brand-1);
+}
+
 .VPSidebarItem.is-active > .item .text {
-  color: #fff !important;
-  background: var(--hc-blue);
-  box-shadow: 4px 0 0 var(--hc-blue);
+  color: var(--vp-c-text-1) !important;
+  font-weight: 700;
 }
 
 .VPDoc h1,
 .VPDoc h2,
+.VPDoc h3,
 .VPHomeHero .name,
-.VPHomeHero .text {
-  font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
-  letter-spacing: -0.035em;
+.VPHomeHero .text,
+.VPFeature .title {
+  font-family: var(--hc-font-display);
 }
 
 .VPDoc h1 {
-  max-width: 780px;
-  color: var(--vp-c-brand-1);
-  font-size: clamp(38px, 6vw, 64px);
-  line-height: 0.98;
+  max-width: 850px;
+  margin-bottom: 30px;
+  color: var(--vp-c-text-1);
+  font-size: clamp(48px, 6.5vw, 82px);
+  font-weight: 500;
+  letter-spacing: -0.065em;
+  line-height: 0.86;
 }
 
 .VPDoc h2 {
-  margin-top: 56px;
-  border-top: 4px solid var(--vp-c-brand-1);
-  padding-top: 16px;
-  font-size: 30px;
+  margin-top: 68px;
+  padding-top: 20px;
+  border-top: 1px solid var(--vp-c-divider);
+  font-size: clamp(30px, 3.8vw, 45px);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.VPDoc h2::before {
+  display: block;
+  margin-bottom: 13px;
+  color: var(--vp-c-brand-1);
+  content: "SECTION";
+  font-family: var(--vp-font-family-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
 }
 
 .VPDoc h3 {
-  font-family: var(--vp-font-family-mono);
-  font-size: 16px;
-  letter-spacing: -0.02em;
+  margin-top: 38px;
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.vp-doc p,
+.vp-doc li {
+  line-height: 1.72;
+}
+
+.vp-doc a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.VPHome {
+  padding-bottom: 0 !important;
+}
+
+.VPHomeHero {
+  padding-top: clamp(92px, 12vw, 170px) !important;
+  padding-bottom: clamp(72px, 9vw, 130px) !important;
+  border-bottom: 1px solid var(--vp-c-divider);
 }
 
 .VPHomeHero .container {
   align-items: end;
 }
 
+.VPHomeHero .main {
+  max-width: 1050px;
+}
+
 .VPHomeHero .name {
   color: var(--vp-c-brand-1) !important;
-  font-size: clamp(52px, 9vw, 96px);
-  line-height: 0.86;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .VPHomeHero .text {
-  max-width: 760px;
-  padding-top: 18px;
-  font-size: clamp(34px, 6vw, 68px);
-  line-height: 0.94;
+  max-width: 1000px;
+  padding-top: 24px;
+  color: var(--vp-c-text-1);
+  font-size: clamp(58px, 8vw, 112px);
+  font-weight: 500;
+  letter-spacing: -0.072em;
+  line-height: 0.8;
 }
 
 .VPHomeHero .tagline {
-  max-width: 650px;
-  padding-left: 13px;
-  border-left: 4px solid var(--vp-c-brand-3);
-  font-family: var(--vp-font-family-mono);
-  font-size: 15px;
+  max-width: 700px;
+  margin-top: 34px;
+  color: var(--vp-c-text-2);
+  font-family: var(--hc-font-display);
+  font-size: clamp(18px, 2vw, 25px);
+  line-height: 1.4;
+}
+
+.VPHomeHero .actions {
+  padding-top: 12px;
+}
+
+.VPButton {
+  min-height: 44px;
+  padding: 0 17px !important;
+  border: 1px solid var(--vp-c-text-1) !important;
+  border-radius: 0 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.VPButton.brand {
+  color: var(--vp-c-bg) !important;
+  background: var(--vp-c-text-1) !important;
+}
+
+.VPButton.alt {
+  color: var(--vp-c-text-1) !important;
+  background: transparent !important;
+}
+
+.VPButton:hover {
+  color: #fff !important;
+  background: var(--vp-c-brand-1) !important;
+  border-color: var(--vp-c-brand-1) !important;
+}
+
+.VPFeatures {
+  padding: 0 !important;
+  background: var(--hc-dark);
+}
+
+.VPFeatures .container {
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+.VPFeatures .items {
+  margin: 0 !important;
+}
+
+.VPFeatures .item {
+  padding: 0 !important;
 }
 
 .VPFeature {
-  border: 2px solid var(--vp-c-text-1) !important;
+  min-height: 160px;
+  display: flex !important;
+  align-items: end;
+  padding: 22px clamp(18px, 2.5vw, 34px) !important;
+  color: #f1eee5;
+  background: var(--hc-dark) !important;
+  border: 0 !important;
+  border-right: 1px solid var(--hc-line-dark) !important;
   border-radius: 0 !important;
-  background: var(--vp-c-bg-elv) !important;
-  box-shadow: 5px 5px 0 var(--hc-shadow);
+}
+
+.VPFeatures .item:last-child .VPFeature {
+  border-right: 0 !important;
 }
 
 .VPFeature .box {
@@ -177,74 +328,78 @@
 }
 
 .VPFeature .title {
-  margin: 0 !important;
-  padding: 8px 12px;
-  color: #fff;
-  background: linear-gradient(90deg, var(--hc-blue), var(--hc-blue-light));
-  font-family: var(--vp-font-family-mono);
-  font-size: 13px;
-  text-transform: uppercase;
+  margin: 0 0 10px !important;
+  color: #f1eee5;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
 }
 
 .VPFeature .details {
   margin: 0 !important;
-  padding: 16px 18px 20px;
+  color: #aaa79d !important;
+  font-size: 10px;
+  line-height: 1.55;
 }
 
-.VPButton {
-  border: 2px solid !important;
-  border-color: var(--hc-surface-light) var(--vp-c-text-1) var(--vp-c-text-1) var(--hc-surface-light) !important;
-  border-radius: 0 !important;
-  box-shadow: 3px 3px 0 var(--hc-shadow);
-  font-family: var(--vp-font-family-mono);
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  text-transform: uppercase;
-}
-
-.VPButton.brand {
-  background: var(--hc-blue) !important;
-  box-shadow: 4px 4px 0 var(--hc-shadow);
-}
-
-.VPButton:active {
-  border-color: var(--vp-c-text-1) var(--hc-surface-light) var(--hc-surface-light) var(--vp-c-text-1) !important;
-  box-shadow: 1px 1px 0 var(--hc-shadow);
-  transform: translate(2px, 2px);
+.VPHome .vp-doc.container {
+  padding-top: clamp(74px, 9vw, 130px);
+  padding-bottom: clamp(74px, 9vw, 130px);
 }
 
 .vp-doc div[class*="language-"] {
-  border: 2px solid var(--vp-c-text-1);
+  border: 1px solid var(--hc-line-dark);
   border-radius: 0;
-  box-shadow: 4px 4px 0 var(--hc-shadow);
+}
+
+.vp-doc :not(pre) > code {
+  border-radius: 0;
+  font-size: 0.88em;
 }
 
 .vp-doc table {
   display: table;
   width: 100%;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc tr {
+  border-top: 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc th,
+.vp-doc td {
+  border: 0;
+  border-right: 1px solid var(--vp-c-divider);
 }
 
 .vp-doc th {
-  color: #fff;
-  background: var(--hc-blue);
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-alt);
   font-family: var(--vp-font-family-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-size: 8px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .custom-block {
-  border-radius: 0;
   border: 1px solid var(--vp-c-divider);
-  border-left: 5px solid var(--vp-c-brand-3);
+  border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 0;
   background: var(--vp-c-bg-elv);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--hc-shadow) 60%, transparent);
 }
 
 .custom-block-title {
   font-family: var(--vp-font-family-mono);
-  letter-spacing: 0.04em;
+  font-size: 9px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.VPDocAsideOutline .outline-title,
+.VPDocOutlineItem {
+  font-size: 11px;
 }
 
 .VPDocOutlineItem .outline-link.active {
@@ -252,21 +407,69 @@
   font-weight: 700;
 }
 
+.VPDocFooter {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.pager-link {
+  border: 1px solid var(--vp-c-divider) !important;
+  border-radius: 0 !important;
+  background: var(--vp-c-bg-elv);
+}
+
+.pager-link .title {
+  font-family: var(--hc-font-display);
+  font-size: 18px;
+}
+
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider) !important;
+  background: var(--vp-c-bg) !important;
+  font-family: var(--vp-font-family-mono);
+  font-size: 9px !important;
+}
+
+@media (max-width: 960px) {
+  .VPFeature {
+    border-bottom: 1px solid var(--hc-line-dark) !important;
+  }
+
+  .VPFeatures .item:nth-child(2n) .VPFeature {
+    border-right: 0 !important;
+  }
+}
+
 @media (max-width: 640px) {
-  .VPHomeHero .name {
-    font-size: 50px;
+  .VPNavBarTitle .title::before {
+    width: 27px;
+    height: 27px;
+    font-size: 15px;
   }
 
   .VPHomeHero .text {
-    font-size: 36px;
+    font-size: clamp(52px, 16vw, 76px);
+  }
+
+  .VPHomeHero .tagline {
+    font-size: 18px;
   }
 
   .VPFeature {
-    box-shadow: 3px 3px 0 var(--vp-c-text-1);
+    min-height: 130px;
+    border-right: 0 !important;
   }
 
-  .VPNavBarTitle .title::before {
-    width: 10px;
-    height: 10px;
+  .VPDoc h1 {
+    font-size: 48px;
+  }
+
+  .VPDoc h2 {
+    font-size: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
