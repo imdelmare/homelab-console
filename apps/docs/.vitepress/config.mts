@@ -2,7 +2,7 @@ import { defineConfig } from "vitepress";
 import { fileURLToPath } from "node:url";
 
 const base = process.env.DOCS_BASE || "/docs/";
-const repository = "https://github.com/imdelmare/homelab-mcp";
+const repository = "https://github.com/imdelmare/homelab-console";
 
 export default defineConfig({
   title: "Homelab Console",
