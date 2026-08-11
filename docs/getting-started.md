@@ -1,8 +1,16 @@
 # Getting Started
 
-Homelab Console is a Python and React control plane intended to run close to the
-infrastructure it manages. PostgreSQL stores canonical state; provider adapters
-reach declared systems through narrow, typed tools.
+Homelab Console runs close to the infrastructure it manages and can use a small
+model on the same host or private LAN for bounded reasoning. PostgreSQL stores
+canonical state; provider adapters reach declared systems through narrow, typed
+tools. The model receives neither provider credentials nor arbitrary network
+access.
+
+The supported Community Compose stack starts PostgreSQL, API, web, and MCP. It
+stays healthy with every AI runtime disabled, so you can establish the control
+plane and connect infrastructure before choosing a model. Ollama and the
+inventory-bound OpenAI-compatible LAN adapter are the current local inference
+paths; cloud inference is optional.
 
 ## See the workflow first
 
@@ -11,14 +19,16 @@ from the control room to task evidence, operator approval, and audit. It is the
 fastest way to understand what the system does before reading implementation or
 deployment details.
 
-The first useful path in a configured console is:
+The first useful local-first path in a configured console is:
 
 ```text
 Open Overview
   → inspect one provider observation
   → run a read-only summary tool
   → review the resulting task evidence
-  → pair an MCP client
+  → ask a bounded, read-oriented question through a local model
+  → if needed, request an exact write through a governed tool client
+  → let the operator approve or deny that invocation
   → inspect the audited invocation
 ```
 
@@ -34,14 +44,19 @@ Open Overview
 | `docs` | Canonical architecture, security, and operating documentation |
 | `deploy` | systemd, Caddy, and fallback container definitions |
 
-## Read the system before deploying it
+## Choose the shortest path
 
 1. Start with the [Product Tour](./product-tour.md) and the operator workflow.
-2. Continue with [Architecture](./architecture.md) and the five-plane model.
-3. Review the non-negotiable boundaries in [Security](./security.md).
-4. Understand identities and sessions in [Authentication](./authentication.md).
-5. Learn how external agents connect through the [MCP adapter](./mcp.md).
-6. Review the normalized integration contracts in [Providers](./providers.md).
+2. Read [Conversation Service](./conversation.md) for the current Ollama and
+   private OpenAI-compatible model contracts and their bounded tool scope.
+3. Connect one integration using the normalized contracts in
+   [Providers](./providers.md).
+4. Review how exact writes stop at the human boundary in
+   [Security](./security.md).
+5. Use the [MCP adapter](./mcp.md) only when you want an external compatible
+   agent to share the same governed tool surface.
+6. Continue with [Architecture](./architecture.md) when you need the complete
+   five-plane model and execution internals.
 
 ## Local validation
 

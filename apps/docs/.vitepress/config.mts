@@ -6,7 +6,7 @@ const repository = "https://github.com/imdelmare/homelab-mcp";
 
 export default defineConfig({
   title: "Homelab Console",
-  description: "Documentation for the AI-native homelab control plane.",
+  description: "Run your homelab privately with a small local AI.",
   base,
   srcDir: "content",
   vite: {
@@ -29,43 +29,44 @@ export default defineConfig({
     siteTitle: "HC / Field Manual",
     nav: [
       { text: "Start", link: "/getting-started" },
+      { text: "Local AI", link: "/conversation" },
       { text: "Product Tour", link: "/product-tour" },
-      { text: "Architecture", link: "/architecture" },
-      { text: "MCP Clients", link: "/mcp" },
-      { text: "Security", link: "/security" },
+      { text: "Providers", link: "/providers" },
+      { text: "Internals", link: "/architecture" },
       { text: "GitHub", link: repository },
     ],
     sidebar: [
       {
-        text: "Orientation",
+        text: "Start here",
         items: [
-          { text: "Field manual", link: "/" },
+          { text: "What is Homelab Console?", link: "/" },
           { text: "Getting started", link: "/getting-started" },
           { text: "Product tour", link: "/product-tour" },
         ],
       },
       {
-        text: "Core system",
+        text: "Using Homelab Console",
+        items: [
+          { text: "Local models", link: "/conversation" },
+          { text: "Provider setup", link: "/providers" },
+          { text: "Approvals and security", link: "/security" },
+          { text: "Watchers", link: "/watchers" },
+          { text: "Notifications", link: "/notifications" },
+          { text: "AI delivery metrics", link: "/metrics" },
+        ],
+      },
+      {
+        text: "External agents",
+        items: [
+          { text: "MCP adapter", link: "/mcp" },
+        ],
+      },
+      {
+        text: "Internals",
         items: [
           { text: "Architecture", link: "/architecture" },
           { text: "Security model", link: "/security" },
           { text: "Authentication", link: "/authentication" },
-        ],
-      },
-      {
-        text: "Agents and automation",
-        items: [
-          { text: "MCP adapter", link: "/mcp" },
-          { text: "Conversation service", link: "/conversation" },
-          { text: "Watchers", link: "/watchers" },
-          { text: "Notifications", link: "/notifications" },
-          { text: "AI metrics", link: "/metrics" },
-        ],
-      },
-      {
-        text: "Infrastructure",
-        items: [
-          { text: "Provider contracts", link: "/providers" },
           { text: "External Sentinel", link: "/sentinel" },
         ],
       },
@@ -75,7 +76,7 @@ export default defineConfig({
     outline: { level: [2, 3], label: "On this page" },
     lastUpdated: { text: "Updated" },
     footer: {
-      message: "Typed tools. Explicit trust. Human authority.",
+      message: "Local reasoning. Typed tools. Human authority.",
       copyright: "Homelab Console documentation",
     },
   },
