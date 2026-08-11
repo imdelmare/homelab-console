@@ -13,7 +13,7 @@ operator approval.
 - `apps/api` — FastAPI control plane, providers, tasks, approvals, and audit.
 - `apps/web` — React operator desktop with a Windows 98-inspired interface.
 - `apps/mcp` — authenticated stdio and streamable HTTP MCP adapter.
-- `apps/sentinel` — independent external availability observer.
+- [External Sentinel](https://github.com/imdelmare/homelab-console-sentinel) — independently released availability observer.
 - `apps/docs` — VitePress field manual and landing-page assembly.
 
 ## Development validation
@@ -35,6 +35,23 @@ TEST_DATABASE_URL=postgresql+psycopg://example:example@localhost:5432/postgres  
 
 Start from `config/homelab.example.yml` and add only targets you explicitly
 control. Never commit a populated `.env`, credentials, or local inventory.
+
+## Containerized Community Edition
+
+The reviewed public repository publishes API, MCP and web images from the exact
+source visible on public `main`. PostgreSQL remains the official upstream image.
+
+```bash
+cp deploy/compose/env.example .env.compose
+cp config/homelab.example.yml config/homelab.local.yml
+cp config/secrets.local.example.yml config/secrets.local.yml
+docker compose -f deploy/compose/compose.ghcr.yaml --env-file .env.compose up -d
+```
+
+The default bindings are loopback-only. Image references may be replaced with
+release digests in `.env.compose` for immutable deployments. See
+[`deploy/compose/README.md`](deploy/compose/README.md) for bootstrap, backup and
+upgrade guidance.
 
 ## Documentation
 

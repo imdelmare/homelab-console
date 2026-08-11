@@ -561,6 +561,8 @@ export type McpClient = {
   revoked_at: string | null;
   revoked_reason: string;
   created_by: string;
+  capabilities: string[];
+  principal_id: string;
 };
 
 export type McpRotateResult = {

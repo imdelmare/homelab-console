@@ -20,6 +20,8 @@ COPY apps/web/ ./
 # is served from a different origin than the web app.
 ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ARG VITE_MCP_ENDPOINT=
+ENV VITE_MCP_ENDPOINT=${VITE_MCP_ENDPOINT}
 
 RUN npm run build
 

@@ -21,6 +21,7 @@ os.environ.update(
         "TELEGRAM_BOT_TOKEN": "",
         "FIXER_DISPATCH_ENABLED": "false",
         "FIXER_DISPATCH_SECRET": "",
+        "CONVERSATION_ENABLED": "true",
         "CONVERSATION_PROVIDER": "ollama",
         "OPENCODE_GO_API_KEY": "",
         "TASK_ROUTER_PROVIDER": "",

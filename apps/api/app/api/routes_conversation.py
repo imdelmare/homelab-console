@@ -49,7 +49,10 @@ async def conversation_message(
         # Failed model turns are canonical delivery telemetry and remain useful
         # even when no assistant response can be produced.
         await db.commit()
-        raise HTTPException(status_code=503, detail={"code": "conversation_unavailable", "message": str(exc)}) from exc
+        raise HTTPException(
+            status_code=503,
+            detail={"code": exc.code, "message": str(exc)},
+        ) from exc
     await db.commit()
     return result.model_dump(mode="json")
 

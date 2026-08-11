@@ -130,6 +130,36 @@ async def test_ambiguous_match_uses_model_and_validates_candidate(db_session):
     assert result.input_tokens == 120
 
 
+async def test_model_gate_keeps_deterministic_matching_but_skips_ambiguous_model(
+    db_session, monkeypatch
+):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "conversation_enabled", False)
+    incident = await resolved_candidate(db_session)
+
+    class MustNotRun:
+        async def decide(self, _context):
+            raise AssertionError("model must not run")
+
+    ambiguous = await match_incident(
+        db_session,
+        detected(),
+        now=datetime.now(UTC),
+        model=MustNotRun(),
+    )
+    exact = await match_incident(
+        db_session,
+        detected(dedupe_key=incident.dedupe_key),
+        now=datetime.now(UTC),
+        model=MustNotRun(),
+    )
+
+    assert ambiguous.outcome == "new"
+    assert ambiguous.reason == "model-assisted matching disabled"
+    assert exact.outcome == "already_handled"
+    assert exact.method == "deterministic"
+
+
 async def test_critical_match_always_requires_operator_review(db_session):
     incident = await resolved_candidate(db_session, dedupe_key="gateway:same")
 

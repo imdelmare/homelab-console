@@ -309,6 +309,12 @@ export function dispatchTaskToFixer(taskId: string) {
   });
 }
 
+export function assignWorkerTask(taskId: string, clientId: string, expectedVersion: number) {
+  return request<{ task: Task }>(`/api/tasks/${encodeURIComponent(taskId)}/assign-worker`, {
+    method: "POST",
+    body: { client_id: clientId, expected_version: expectedVersion },
+  }).then(({ task }) => task);
+}
 export function releaseTaskWithHandoff(taskId: string, expectedVersion: number, handoffSummary: string) {
   return request<Task>(`/api/tasks/${encodeURIComponent(taskId)}/release`, {
     method: "POST",
@@ -376,8 +382,19 @@ export function rotateMcpClient(clientId: string) {
   });
 }
 
+export function setMcpClientCapabilities(
+  clientId: string,
+  capabilities: string[],
+  confirmWorkerConversion = false,
+) {
+  return request<McpClient>(`/api/mcp/clients/${encodeURIComponent(clientId)}/capabilities`, {
+    method: "PUT",
+    body: { capabilities, confirm_worker_conversion: confirmWorkerConversion },
+  });
+}
+
 export function startMcpPairing(payload: {
-  agent_id: "codex" | "claude" | "fixer" | "cline" | "opencode";
+  agent_id: "codex" | "claude" | "fixer" | "cline" | "opencode" | "worker";
   client_label: string;
   host_fingerprint: string;
 }) {

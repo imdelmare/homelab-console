@@ -34,10 +34,12 @@ from app.services.mcp_clients import (
     mcp_pairing_public,
     revoke_mcp_client,
     rotate_mcp_client_token,
+    set_mcp_client_capabilities,
     start_pairing,
 )
 from app.services.ops_health import operational_health
 from app.services.provider_metadata import watcher_ids_for_provider
+from app.services.remediation_workers import RemediationWorkerError, assign_worker_task, worker_job_public
 from app.services.provider_definitions import list_provider_definitions
 from app.services.task_context import compile_task_context
 from app.services.task_router_queue import enqueue_task_routing
@@ -181,6 +183,10 @@ class OperatorCompleteRequest(VersionedRequest):
     note: str = Field(min_length=1, max_length=4000)
 
 
+class AssignWorkerRequest(VersionedRequest):
+    client_id: str = Field(min_length=1, max_length=64)
+
+
 class FindingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -208,6 +214,13 @@ class RevokeMcpClientRequest(BaseModel):
     reason: str = Field(default="operator_revoked", max_length=256)
 
 
+class McpClientCapabilitiesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    capabilities: list[str] = Field(default_factory=list, max_length=8)
+    confirm_worker_conversion: bool = False
+
+
 class McpPairingStartRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -232,6 +245,7 @@ def _task_service_http_error(exc: TaskServiceError) -> HTTPException:
         "version_conflict": 409,
         "task_already_claimed": 409,
         "client_offline": 409,
+        "worker_client_requires_assignment": 409,
         "invalid_transition": 409,
         "invalid_status": 400,
         "invalid_input": 400,
@@ -247,9 +261,24 @@ def _mcp_client_http_error(exc: McpClientError) -> HTTPException:
         "unknown_pairing": 404,
         "client_revoked": 409,
         "client_not_revoked": 409,
+        "client_has_worker_history": 409,
         "invalid_agent": 400,
+        "invalid_capability": 400,
+        "worker_conversion_confirmation_required": 409,
         "invalid_pairing_secret": 403,
         "pairing_consumed": 409,
+    }.get(exc.code, 400)
+    return HTTPException(status_code=status, detail={"code": exc.code, "message": exc.message})
+
+
+def _worker_http_error(exc: RemediationWorkerError) -> HTTPException:
+    status = {
+        "unknown_worker_job": 404,
+        "worker_capability_required": 403,
+        "worker_client_revoked": 409,
+        "worker_job_not_ready": 409,
+        "worker_lease_conflict": 409,
+        "idempotency_conflict": 409,
     }.get(exc.code, 400)
     return HTTPException(status_code=status, detail={"code": exc.code, "message": exc.message})
 
@@ -423,6 +452,28 @@ async def rotate_mcp_client_endpoint(
         raise _mcp_client_http_error(exc) from exc
     await db.commit()
     return {"ok": True, "token": result.token, "client": mcp_client_public(result.client)}
+
+
+@router.put("/mcp/clients/{client_id}/capabilities")
+async def update_mcp_client_capabilities_endpoint(
+    client_id: str,
+    payload: McpClientCapabilitiesRequest,
+    auth: CurrentAuth = Depends(require_csrf),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    try:
+        client = await set_mcp_client_capabilities(
+            db,
+            client_id=client_id,
+            capabilities=payload.capabilities,
+            actor=auth.actor,
+            confirm_worker_conversion=payload.confirm_worker_conversion,
+        )
+    except McpClientError as exc:
+        await db.rollback()
+        raise _mcp_client_http_error(exc) from exc
+    await db.commit()
+    return mcp_client_public(client)
 
 
 @router.delete("/mcp/clients/{client_id}", status_code=204)
@@ -627,6 +678,32 @@ async def claim_task_as_operator_endpoint(
         raise _task_service_http_error(exc) from exc
     await db.commit()
     return task_public(task)
+
+
+@router.post("/tasks/{task_id}/assign-worker", status_code=201)
+async def assign_worker_task_endpoint(
+    task_id: str,
+    payload: AssignWorkerRequest,
+    auth: CurrentAuth = Depends(require_csrf),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    try:
+        task, job = await assign_worker_task(
+            db,
+            task_id=task_id,
+            client_id=payload.client_id,
+            actor=auth.actor,
+            expected_version=payload.expected_version,
+            source="rest",
+        )
+    except TaskServiceError as exc:
+        await db.rollback()
+        raise _task_service_http_error(exc) from exc
+    except RemediationWorkerError as exc:
+        await db.rollback()
+        raise _worker_http_error(exc) from exc
+    await db.commit()
+    return {"task": task_public(task), "job": worker_job_public(job)}
 
 
 @router.post("/tasks/{task_id}/handoff-to-client")

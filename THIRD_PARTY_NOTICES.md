@@ -60,16 +60,6 @@ inventory was generated.
 
 ## Separately licensed components not distributed by this repository
 
-### Speedtest CLI
-
-The optional probe expects an operator-supplied executable at
-`local-assets/speedtest`. That path is gitignored. The public repository,
-automated build and release artifacts do not download or redistribute the
-binary. The official Ookla package is separately licensed and described by its
-publisher for personal, non-commercial use. Operators must review the current
-vendor terms before installation and must not redistribute an image containing
-the binary without permission.
-
 ### Gemma model weights
 
 Gemma weights and model derivatives are governed by Google's separate Gemma

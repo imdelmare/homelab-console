@@ -41,10 +41,21 @@ from app.db.session import get_session_factory  # noqa: E402
 from app.domain.actors import Actor  # noqa: E402
 from app.services.mcp_clients import (  # noqa: E402
     McpClientError,
+    TASK_WORKER_CAPABILITY,
+    VALID_MCP_AGENT_IDS,
     consume_pairing,
+    mcp_client_actor,
+    mcp_client_has_capability,
     start_pairing,
     validate_client_token_any_agent,
     validate_client_token,
+)
+from app.services.remediation_workers import (  # noqa: E402
+    RemediationWorkerError,
+    validate_worker_lease,
+    worker_finish,
+    worker_next,
+    worker_renew,
 )
 from app.services.approvals_service import (  # noqa: E402
     ApprovalError,
@@ -80,10 +91,13 @@ from app.services.tasks_service import (  # noqa: E402
 from app.tools.execution import execute_tool  # noqa: E402
 from app.tools.registry import list_tools  # noqa: E402
 
-VALID_MCP_AGENT_IDS = {"claude", "fixer", "codex", "cline", "opencode"}
+MCP_HTTP_SESSION_IDLE_TIMEOUT_SECONDS = 1800
+MCP_HTTP_GRACEFUL_SHUTDOWN_SECONDS = 60
 
 server = Server("homelab-console")
 _http_actor: ContextVar[Actor | None] = ContextVar("homelab_mcp_http_actor", default=None)
+_mcp_client = ContextVar("homelab_mcp_client", default=None)
+_stdio_bearer_token: ContextVar[str] = ContextVar("homelab_mcp_stdio_bearer_token", default="")
 
 
 class _McpInput(BaseModel):
@@ -98,6 +112,8 @@ class TaskListInput(_McpInput):
 
 class TaskIdInput(_McpInput):
     task_id: str = Field(min_length=8, max_length=64)
+    worker_job_id: str | None = Field(default=None, min_length=8, max_length=64)
+    worker_lease_token: str | None = Field(default=None, min_length=16, max_length=256)
 
 
 class TaskCreateInput(_McpInput):
@@ -152,10 +168,28 @@ class ApprovalRequestInput(_McpInput):
     tool_id: str = Field(min_length=1, max_length=128)
     input: dict = Field(default_factory=dict)
     task_id: str | None = None
+    worker_job_id: str | None = Field(default=None, min_length=8, max_length=64)
+    worker_lease_token: str | None = Field(default=None, min_length=16, max_length=256)
 
 
 class ApprovalGetInput(_McpInput):
     approval_id: str = Field(min_length=8, max_length=64)
+
+
+class WorkerNextInput(_McpInput):
+    pass
+
+
+class WorkerRenewInput(_McpInput):
+    job_id: str = Field(min_length=8, max_length=64)
+    lease_token: str = Field(min_length=16, max_length=256)
+    idempotency_key: str = Field(min_length=1, max_length=36)
+
+
+class WorkerFinishInput(WorkerRenewInput):
+    outcome: str = Field(min_length=1, max_length=16)
+    expected_task_version: int = Field(ge=1)
+    error_code: str = Field(default="", max_length=64)
 
 
 APPROVAL_TOOL_MODELS: dict[str, tuple[str, type[BaseModel]]] = {
@@ -201,6 +235,32 @@ TASK_TOOL_MODELS: dict[str, tuple[str, type[BaseModel]]] = {
         VersionedTaskInput,
     ),
     "tasks.reopen": ("Reopen a completed task.", VersionedTaskInput),
+}
+
+WORKER_READ_TASK_TOOLS = frozenset(
+    {
+        "tasks.list",
+        "tasks.get",
+        "tasks.context",
+        "tasks.events.list",
+        "tasks.findings.list",
+        "tasks.checks.list",
+    }
+)
+WORKER_BLOCKED_TASK_TOOLS = frozenset({"tasks.create", "tasks.claim", "tasks.reopen"})
+WORKER_TOOL_MODELS: dict[str, tuple[str, type[BaseModel]]] = {
+    "tasks.worker.next": (
+        "Acquire the next operator-assigned remediation job and its bounded lease.",
+        WorkerNextInput,
+    ),
+    "tasks.worker.renew": (
+        "Renew an active remediation lease using an idempotency key.",
+        WorkerRenewInput,
+    ),
+    "tasks.worker.finish": (
+        "Finish or retry a remediation job after canonical task state is updated.",
+        WorkerFinishInput,
+    ),
 }
 
 
@@ -327,24 +387,29 @@ def _host_fingerprint() -> str:
     return socket.gethostname()
 
 
-async def check_client_token(provided: str | None, agent_id: str | None = None) -> bool:
+async def authenticate_client_token(provided: str | None, agent_id: str | None = None):
     agent_id = agent_id or get_mcp_agent_id()
     if not provided:
-        return False
+        return None
     async with get_session_factory()() as db:
         client = await validate_client_token(db, token=provided, agent_id=agent_id)
         if client is None:
             await db.rollback()
-            return False
+            return None
         await db.commit()
-        return True
+        return client
 
 
-async def ensure_mcp_registration() -> None:
+async def check_client_token(provided: str | None, agent_id: str | None = None) -> bool:
+    return await authenticate_client_token(provided, agent_id) is not None
+
+
+async def ensure_mcp_registration():
     agent_id = get_mcp_agent_id()
     client_token = _read_client_token(agent_id)
-    if await check_client_token(client_token, agent_id):
-        return
+    client = await authenticate_client_token(client_token, agent_id)
+    if client is not None:
+        return client
 
     async with get_session_factory()() as db:
         pairing = await start_pairing(
@@ -384,7 +449,7 @@ async def ensure_mcp_registration() -> None:
             await db.commit()
             path = _write_client_token(agent_id, result.token)
             print(f"MCP client registered; token saved to {path}", file=sys.stderr)
-            return
+            return result.client
 
     print("MCP pairing timed out.", file=sys.stderr)
     raise SystemExit(2)
@@ -393,16 +458,62 @@ async def ensure_mcp_registration() -> None:
 def get_mcp_agent_id() -> str:
     agent_id = get_settings().mcp_agent_id.strip().lower()
     if agent_id not in VALID_MCP_AGENT_IDS:
-        raise RuntimeError("MCP_AGENT_ID must be one of: claude, fixer, codex, cline, opencode")
+        raise RuntimeError(
+            "MCP_AGENT_ID must be one of: claude, fixer, codex, cline, opencode, worker"
+        )
     return agent_id
 
 
 def get_mcp_actor() -> Actor:
+    client = _mcp_client.get()
+    if client is not None:
+        return mcp_client_actor(client)
     actor = _http_actor.get()
     if actor is not None:
         return actor
     agent_id = get_mcp_agent_id()
     return Actor(kind="agent", id=agent_id, label=f"MCP {agent_id}")
+
+
+def _is_worker_registration() -> bool:
+    client = _mcp_client.get()
+    return client is not None and (
+        client.agent_id == "worker" or client.principal_id.startswith("worker:")
+    )
+
+
+def _worker_capability_active() -> bool:
+    client = _mcp_client.get()
+    return (
+        client is not None
+        and _is_worker_registration()
+        and client.revoked_at is None
+        and mcp_client_has_capability(client, TASK_WORKER_CAPABILITY)
+    )
+
+
+def _worker_client_id() -> str:
+    client = _mcp_client.get()
+    if client is None or not _worker_capability_active():
+        raise RemediationWorkerError(
+            "worker_capability_required", "worker capability is required"
+        )
+    return client.id
+
+
+async def _refresh_stdio_authentication() -> bool:
+    """Revalidate persistent stdio sessions before every MCP operation.
+
+    HTTP authenticates each request in its ASGI wrapper. Stdio otherwise keeps
+    one process alive indefinitely, so a capability conversion, token rotation
+    or revocation must be observed without trusting the startup snapshot.
+    """
+    token = _stdio_bearer_token.get()
+    if not token:
+        return True
+    client = await authenticate_client_token(token, get_mcp_agent_id())
+    _mcp_client.set(client)
+    return client is not None
 
 
 def _infra_input_schema(tool) -> dict:
@@ -412,6 +523,16 @@ def _infra_input_schema(tool) -> dict:
         "anyOf": [{"type": "string"}, {"type": "null"}],
         "default": None,
         "description": "Persistent task context metadata. It is not passed to the provider.",
+    }
+    properties["worker_job_id"] = {
+        "anyOf": [{"type": "string"}, {"type": "null"}],
+        "default": None,
+        "description": "Required remediation job metadata for worker task-bound execution.",
+    }
+    properties["worker_lease_token"] = {
+        "anyOf": [{"type": "string"}, {"type": "null"}],
+        "default": None,
+        "description": "Opaque active remediation lease; never passed to the provider.",
     }
     if _needs_approval(tool):
         properties["approval_id"] = {
@@ -440,6 +561,13 @@ def _approval_tool_id_by_name(name: str) -> str | None:
     return None
 
 
+def _worker_tool_id_by_name(name: str) -> str | None:
+    for tool_id in WORKER_TOOL_MODELS:
+        if _mcp_name(tool_id) == name:
+            return tool_id
+    return None
+
+
 def _registry_tool_id(raw: str) -> str:
     """Accept both registry ids (dots) and MCP names (underscores)."""
     if "." in raw:
@@ -458,6 +586,19 @@ async def _handle_approval_tool(tool_id: str, arguments: dict) -> list[types.Tex
     async with get_session_factory()() as db:
         if tool_id == "approvals.request":
             try:
+                if _is_worker_registration():
+                    if not payload.task_id or not payload.worker_job_id or not payload.worker_lease_token:
+                        raise RemediationWorkerError(
+                            "invalid_worker_lease",
+                            "worker approval requests require task and lease metadata",
+                        )
+                    worker_job = await validate_worker_lease(
+                        db,
+                        task_id=payload.task_id,
+                        worker_job_id=payload.worker_job_id,
+                        worker_lease_token=payload.worker_lease_token,
+                        client_id=_worker_client_id(),
+                    )
                 approval = await request_approval(
                     db,
                     tool_id=_registry_tool_id(payload.tool_id),
@@ -465,8 +606,9 @@ async def _handle_approval_tool(tool_id: str, arguments: dict) -> list[types.Tex
                     actor=actor,
                     task_id=payload.task_id,
                     source="mcp",
+                    worker_job=worker_job if _is_worker_registration() else None,
                 )
-            except ApprovalError as exc:
+            except (ApprovalError, RemediationWorkerError) as exc:
                 await db.rollback()
                 return _text(_error_payload(exc.code, exc.message))
             result = approval_public(approval)
@@ -477,6 +619,43 @@ async def _handle_approval_tool(tool_id: str, arguments: dict) -> list[types.Tex
                 return _text(_error_payload("unknown_approval", "unknown approval id"))
             result = approval_public(approval)
     return _text({"ok": True, "result": result})
+
+
+async def _handle_worker_tool(tool_id: str, arguments: dict) -> list[types.TextContent]:
+    _description, model = WORKER_TOOL_MODELS[tool_id]
+    try:
+        payload = model.model_validate(arguments)
+        client_id = _worker_client_id()
+        async with get_session_factory()() as db:
+            if tool_id == "tasks.worker.next":
+                result = await worker_next(db, client_id=client_id)
+            elif tool_id == "tasks.worker.renew":
+                result = await worker_renew(
+                    db,
+                    client_id=client_id,
+                    job_id=payload.job_id,
+                    lease_token=payload.lease_token,
+                    idempotency_key=payload.idempotency_key,
+                )
+            else:
+                result = await worker_finish(
+                    db,
+                    client_id=client_id,
+                    job_id=payload.job_id,
+                    lease_token=payload.lease_token,
+                    idempotency_key=payload.idempotency_key,
+                    outcome=payload.outcome,
+                    expected_task_version=payload.expected_task_version,
+                    error_code=payload.error_code,
+                )
+            await db.commit()
+        return _text({"ok": True, "result": result})
+    except RemediationWorkerError as exc:
+        return _text(_error_payload(exc.code, exc.message))
+    except Exception as exc:
+        if exc.__class__.__module__.startswith("pydantic"):
+            return _text(_error_payload("invalid_input", exc.__class__.__name__))
+        raise
 
 
 def _error_payload(code: str, message: str, invocation_id: str | None = None) -> dict:
@@ -492,6 +671,10 @@ def _text(payload: dict) -> list[types.TextContent]:
 
 @server.list_prompts()
 async def handle_list_prompts() -> list[types.Prompt]:
+    if not await _refresh_stdio_authentication():
+        return []
+    if _is_worker_registration():
+        return []
     return [
         types.Prompt(
             name="homelab_task_workflow",
@@ -506,7 +689,9 @@ async def handle_list_prompts() -> list[types.Prompt]:
 
 @server.get_prompt()
 async def handle_get_prompt(name: str, arguments: dict | None = None) -> types.GetPromptResult:
-    if name != "homelab_task_workflow":
+    if not await _refresh_stdio_authentication():
+        raise ValueError("unauthorized MCP client")
+    if _is_worker_registration() or name != "homelab_task_workflow":
         raise ValueError(f"unknown prompt: {name}")
     return types.GetPromptResult(
         description="Homelab Console MCP task lifecycle instructions.",
@@ -521,7 +706,11 @@ async def handle_get_prompt(name: str, arguments: dict | None = None) -> types.G
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
-    infra_tools = [
+    if not await _refresh_stdio_authentication():
+        return []
+    worker_registration = _is_worker_registration()
+    worker_active = _worker_capability_active()
+    infra_tools = [] if worker_registration and not worker_active else [
         types.Tool(
             name=_mcp_name(tool.id),
             description=tool.description,
@@ -536,8 +725,13 @@ async def handle_list_tools() -> list[types.Tool]:
             inputSchema=model.model_json_schema(),
         )
         for tool_id, (description, model) in TASK_TOOL_MODELS.items()
+        if (
+            not worker_registration
+            or tool_id in WORKER_READ_TASK_TOOLS
+            or (worker_active and tool_id not in WORKER_BLOCKED_TASK_TOOLS)
+        )
     ]
-    approval_tools = [
+    approval_tools = [] if worker_registration and not worker_active else [
         types.Tool(
             name=_mcp_name(tool_id),
             description=description,
@@ -545,26 +739,76 @@ async def handle_list_tools() -> list[types.Tool]:
         )
         for tool_id, (description, model) in APPROVAL_TOOL_MODELS.items()
     ]
-    return infra_tools + task_tools + approval_tools
+    worker_tools = [
+        types.Tool(
+            name=_mcp_name(tool_id),
+            description=description,
+            inputSchema=model.model_json_schema(),
+        )
+        for tool_id, (description, model) in WORKER_TOOL_MODELS.items()
+    ] if worker_active else []
+    return infra_tools + task_tools + approval_tools + worker_tools
 
 
 @server.call_tool()
 async def handle_call_tool(name: str, arguments: dict | None) -> list[types.TextContent]:
+    if not await _refresh_stdio_authentication():
+        return _text(_error_payload("unauthorized", "MCP client token is invalid or revoked"))
     approval_tool_id = _approval_tool_id_by_name(name)
+    task_tool_id = _task_tool_id_by_name(name)
+    infra_tool_id = _tool_id_by_name(name)
+    worker_tool_id = _worker_tool_id_by_name(name)
+    if worker_tool_id is not None:
+        if not _worker_capability_active():
+            return _text(_error_payload("worker_capability_required", "worker capability is required"))
+        return await _handle_worker_tool(worker_tool_id, arguments or {})
+
+    if _is_worker_registration():
+        if task_tool_id in WORKER_BLOCKED_TASK_TOOLS:
+            return _text(
+                _error_payload(
+                    "worker_protocol_unavailable",
+                    "remediation workers cannot claim, create or reopen arbitrary tasks",
+                )
+            )
+        if not _worker_capability_active() and (
+            approval_tool_id is not None
+            or infra_tool_id is not None
+            or (task_tool_id is not None and task_tool_id not in WORKER_READ_TASK_TOOLS)
+        ):
+            return _text(_error_payload("worker_capability_required", "worker capability is required"))
     if approval_tool_id is not None:
         return await _handle_approval_tool(approval_tool_id, arguments or {})
 
-    task_tool_id = _task_tool_id_by_name(name)
     if task_tool_id is not None:
         return await _handle_task_tool(task_tool_id, arguments or {})
 
-    tool_id = _tool_id_by_name(name)
+    tool_id = infra_tool_id
     if tool_id is None:
         return _text(_error_payload("unknown_tool", f"unknown tool: {name}"))
 
     raw_arguments = dict(arguments or {})
     task_id = raw_arguments.pop("task_id", None)
     approval_id = raw_arguments.pop("approval_id", None)
+    worker_job_id = raw_arguments.pop("worker_job_id", None)
+    worker_lease_token = raw_arguments.pop("worker_lease_token", None)
+    worker_client_id = None
+    if _is_worker_registration():
+        if not task_id or not worker_job_id or not worker_lease_token:
+            return _text(
+                _error_payload(
+                    "invalid_worker_lease",
+                    "worker infrastructure calls require task and lease metadata",
+                )
+            )
+        worker_client_id = _worker_client_id()
+    worker_execution = {}
+    if worker_client_id is not None:
+        worker_execution = {
+            "worker_client_id": worker_client_id,
+            "worker_job_id": worker_job_id,
+            "worker_lease_token": worker_lease_token,
+        }
     result = await execute_tool(
         tool_id,
         raw_arguments,
@@ -572,6 +816,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
         source="mcp",
         task_id=task_id,
         approval_id=approval_id,
+        **worker_execution,
     )
     if result.ok:
         payload = {"ok": True, "invocation_id": result.invocation_id, "result": result.result}
@@ -597,6 +842,22 @@ async def _handle_task_tool(tool_id: str, arguments: dict) -> list[types.TextCon
     agent = f"agent:{actor.id}"
     try:
         async with get_session_factory()() as db:
+            if _is_worker_registration() and tool_id not in WORKER_READ_TASK_TOOLS:
+                worker_job_id = getattr(payload, "worker_job_id", None)
+                worker_lease_token = getattr(payload, "worker_lease_token", None)
+                task_id = getattr(payload, "task_id", None)
+                if not task_id or not worker_job_id or not worker_lease_token:
+                    raise RemediationWorkerError(
+                        "invalid_worker_lease",
+                        "worker task mutations require active lease metadata",
+                    )
+                await validate_worker_lease(
+                    db,
+                    task_id=task_id,
+                    worker_job_id=worker_job_id,
+                    worker_lease_token=worker_lease_token,
+                    client_id=_worker_client_id(),
+                )
             if tool_id == "tasks.list":
                 rows = await list_tasks(
                     db,
@@ -720,7 +981,7 @@ async def _handle_task_tool(tool_id: str, arguments: dict) -> list[types.TextCon
                 return _text(_error_payload("unknown_tool", f"unknown tool: {tool_id}"))
             await db.commit()
             return _text({"ok": True, "result": result})
-    except TaskServiceError as exc:
+    except (TaskServiceError, RemediationWorkerError) as exc:
         return _text(_error_payload(exc.code, exc.message))
 
 
@@ -736,6 +997,7 @@ def build_streamable_http_app() -> Starlette:
         app=server,
         stateless=False,
         security_settings=security,
+        session_idle_timeout=MCP_HTTP_SESSION_IDLE_TIMEOUT_SECONDS,
     )
 
     @asynccontextmanager
@@ -754,11 +1016,13 @@ def build_streamable_http_app() -> Starlette:
             await JSONResponse({"error": "unauthorized"}, status_code=401)(scope, receive, send)
             return
         token = _http_actor.set(
-            Actor(kind="agent", id=client.agent_id, label=client.client_label or f"MCP {client.agent_id}")
+            mcp_client_actor(client)
         )
+        client_token = _mcp_client.set(client)
         try:
             await session_manager.handle_request(scope, receive, send)
         finally:
+            _mcp_client.reset(client_token)
             _http_actor.reset(token)
 
     class AlreadyHandledResponse(Response):
@@ -789,9 +1053,15 @@ async def run_stdio() -> None:
         raise SystemExit(2) from exc
 
     await init_db()
-    await ensure_mcp_registration()
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
+    client = await ensure_mcp_registration()
+    client_context_token = _mcp_client.set(client)
+    bearer_context_token = _stdio_bearer_token.set(_read_client_token(get_mcp_agent_id()))
+    try:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(read_stream, write_stream, server.create_initialization_options())
+    finally:
+        _stdio_bearer_token.reset(bearer_context_token)
+        _mcp_client.reset(client_context_token)
 
 
 def run_streamable_http() -> None:
@@ -803,6 +1073,10 @@ def run_streamable_http() -> None:
         host=settings.mcp_http_host,
         port=settings.mcp_http_port,
         log_level="info",
+        # Persistent Streamable HTTP GET/SSE connections are expected to stay
+        # open. Bound Uvicorn's connection drain so they cannot block systemd
+        # shutdown until its harder TimeoutStopSec=90 deadline.
+        timeout_graceful_shutdown=MCP_HTTP_GRACEFUL_SHUTDOWN_SECONDS,
     )
 
 

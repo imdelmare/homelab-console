@@ -5,6 +5,7 @@ arbitrary URL, address or hostname from a client or a model.
 """
 
 from datetime import UTC, datetime
+from ipaddress import ip_address
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlsplit
@@ -122,6 +123,43 @@ class HttpTargetEntry(BaseModel):
     owner: str = ""
 
 
+class SentinelHeartbeatEntry(BaseModel):
+    """Fixed outbound heartbeat boundary owned by operator inventory."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    base_url: str
+    source_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{0,62}$")
+
+    @model_validator(mode="after")
+    def validate_endpoint(self) -> "SentinelHeartbeatEntry":
+        parsed = urlsplit(self.base_url)
+        if parsed.scheme not in {"http", "https"}:
+            raise ValueError("Sentinel heartbeat base_url must use HTTP or HTTPS")
+        if not parsed.hostname:
+            raise ValueError("Sentinel heartbeat base_url must include a hostname")
+        try:
+            port = parsed.port
+        except ValueError:
+            raise ValueError("Sentinel heartbeat base_url contains an invalid port") from None
+        if port is not None and port < 1:
+            raise ValueError("Sentinel heartbeat base_url contains an invalid port")
+        if parsed.username or parsed.password:
+            raise ValueError("Sentinel heartbeat base_url must not contain credentials")
+        if parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
+            raise ValueError("Sentinel heartbeat base_url must not contain a path, query or fragment")
+        if parsed.scheme == "http":
+            host = parsed.hostname.lower()
+            try:
+                address_is_private = ip_address(host).is_private
+            except ValueError:
+                address_is_private = host == "localhost" or host.endswith(".internal")
+            if not address_is_private:
+                raise ValueError("HTTP Sentinel heartbeat endpoints must be private")
+        self.base_url = self.base_url.rstrip("/")
+        return self
+
+
 class TlsTargetEntry(BaseModel):
     """A declared TLS endpoint whose certificate expiry the console observes."""
 
@@ -143,7 +181,7 @@ class ApiProviderInstanceEntry(BaseModel):
 
     id: str = Field(pattern=r"^[a-z][a-z0-9_]{1,62}$")
     name: str = ""
-    driver: Literal["json_health_v1", "cloudflare_tunnel_v1", "speedtest_probe_v1"]
+    driver: Literal["json_health_v1", "cloudflare_tunnel_v1"]
     base_url: str = ""
     account_id: str = ""
     tunnel_id: str = ""
@@ -178,20 +216,8 @@ class ApiProviderInstanceEntry(BaseModel):
             raise ValueError("base_url must include a hostname")
         if parsed.username or parsed.password:
             raise ValueError("base_url must not contain credentials")
-        if self.driver == "speedtest_probe_v1" and not self.verify_tls:
-            host = (parsed.hostname or "").lower()
-            if not (
-                host == "localhost"
-                or host == "127.0.0.1"
-                or host.startswith("10.")
-                or host.startswith("192.168.")
-                or host.endswith(".internal")
-            ):
-                raise ValueError(
-                    "speedtest_probe_v1 may disable TLS verification only for a private endpoint"
-                )
-        if self.driver != "speedtest_probe_v1" and self.timeout_seconds > 30:
-            raise ValueError("timeout_seconds may exceed 30 only for speedtest_probe_v1")
+        if self.timeout_seconds > 30:
+            raise ValueError("timeout_seconds must not exceed 30 seconds")
         self.base_url = self.base_url.rstrip("/")
         return self
 
@@ -236,6 +262,11 @@ def _validate_raw(raw: dict[str, Any]) -> None:
     http = raw.get("http", {}) or {}
     for item in http.get("targets", []) or []:
         HttpTargetEntry(**item)
+    providers = raw.get("providers", {}) or {}
+    vps = providers.get("vps", {}) or {}
+    sentinel_heartbeat = vps.get("sentinel_heartbeat")
+    if sentinel_heartbeat is not None:
+        SentinelHeartbeatEntry(**sentinel_heartbeat)
     tls = raw.get("tls", {}) or {}
     for item in tls.get("certificate_targets", []) or []:
         TlsTargetEntry(**item)
@@ -395,6 +426,11 @@ def provider_config(provider_id: str) -> dict[str, Any]:
     providers = _load_raw().get("providers", {}) or {}
     config = providers.get(provider_id, {}) or {}
     return config if isinstance(config, dict) else {}
+
+
+def get_sentinel_heartbeat() -> SentinelHeartbeatEntry | None:
+    value = provider_config("vps").get("sentinel_heartbeat")
+    return SentinelHeartbeatEntry(**value) if isinstance(value, dict) else None
 
 
 def tool_overrides() -> dict[str, dict[str, Any]]:

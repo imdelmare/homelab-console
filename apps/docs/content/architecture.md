@@ -200,8 +200,12 @@ With `TASK_ROUTER_PROVIDER=opencode_go`, inference uses the fixed OpenCode Go
 HTTPS endpoint and reviewed `deepseek-v4-pro` model. The client has no MCP
 identity or tool surface, rejects redirects and validates the result again.
 Stale queue leases are recovered after a bounded interval; the unique task/job
-constraint prevents duplicate routing. Fixer keeps its separate OpenCode agent
-runtime because it requires a governed multi-step MCP loop.
+constraint prevents duplicate routing. ADR 0024 defines the migration of
+autonomous remediation to a separate vendor-neutral MCP worker role. The core
+owns capability grants, assignment, durable leases, recovery and fencing while
+external OpenCode, Codex or future adapters own only their isolated agent
+runtime. The legacy OpenCode Fixer remains a rollback boundary until the first
+external pull adapter passes conformance.
 
 The **Metrics** window adds immutable per-component usage rows and explicit operator
 reviews. Technical success, reviewed accuracy and review coverage remain
@@ -231,9 +235,11 @@ provider tool. See [`watchers.md`](watchers.md).
 Watchers detect problems from the console's own home application host/home-network vantage
 point, so they are structurally blind when that host, site or outbound path is
 unreachable.
-External Sentinel (`apps/sentinel`) is a small, separate VPS-side service that
+External Sentinel is a small, independently released VPS-side service that
 covers exactly that gap: fixed-config HTTP health checks plus a heartbeat
-receiver, local SQLite incident dedup, and direct Telegram alerting.
+receiver, local SQLite incident dedup, and direct Telegram alerting. Its source,
+tests and deployment assets live in
+[`imdelmare/homelab-console-sentinel`](https://github.com/imdelmare/homelab-console-sentinel).
 
 It is deliberately outside the five-plane model above rather than an
 extension of it: it never calls `execute_tool` or any Homelab Console API,

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from tests.conftest import load_mcp_server_module
 
 
@@ -113,8 +115,246 @@ async def test_http_bearer_uses_opencode_actor(db_session):
     assert actor.label == "OpenCode workstation"
 
 
+async def test_worker_capability_uses_client_specific_actor(db_session):
+    server = load_mcp_server_module()
+    from app.domain.actors import Actor
+    from app.services.mcp_clients import create_client_token, set_mcp_client_capabilities
+
+    first = await create_client_token(
+        db_session,
+        agent_id="codex",
+        client_label="Codex worker one",
+        host_fingerprint="worker-one",
+        actor=Actor(kind="telegram", id="111"),
+    )
+    second = await create_client_token(
+        db_session,
+        agent_id="codex",
+        client_label="Codex worker two",
+        host_fingerprint="worker-two",
+        actor=Actor(kind="telegram", id="111"),
+    )
+    await set_mcp_client_capabilities(
+        db_session,
+        client_id=first.client.id,
+        capabilities=["task-worker.v1"],
+        actor=Actor(kind="telegram", id="111"),
+        confirm_worker_conversion=True,
+    )
+    await set_mcp_client_capabilities(
+        db_session,
+        client_id=second.client.id,
+        capabilities=["task-worker.v1"],
+        actor=Actor(kind="telegram", id="111"),
+        confirm_worker_conversion=True,
+    )
+    await db_session.commit()
+
+    actors = []
+    for issued in (first, second):
+        client = await server.authenticate_http_bearer_token(f"Bearer {issued.token}")
+        token = server._mcp_client.set(client)
+        try:
+            actors.append(server.get_mcp_actor())
+        finally:
+            server._mcp_client.reset(token)
+
+    assert actors[0].id == f"worker:{first.client.id}"
+    assert actors[1].id == f"worker:{second.client.id}"
+    assert actors[0].id != actors[1].id
+
+    client = await server.authenticate_http_bearer_token(f"Bearer {first.token}")
+    token = server._mcp_client.set(client)
+    try:
+        names = [tool.name for tool in await server.handle_list_tools()]
+        prompts = await server.handle_list_prompts()
+        blocked = await server.handle_call_tool("tasks_claim", {"task_id": "task-1234"})
+        blocked_infra = await server.handle_call_tool("proxmox_version", {})
+    finally:
+        server._mcp_client.reset(token)
+
+    assert "tasks_get" in names
+    assert "tasks_set_status" in names
+    assert "tasks_claim" not in names
+    assert "tasks_worker_next" in names
+    assert "tasks_worker_renew" in names
+    assert "tasks_worker_finish" in names
+    assert "proxmox_version" in names
+    assert prompts == []
+    assert "worker_protocol_unavailable" in blocked[0].text
+    assert "invalid_worker_lease" in blocked_infra[0].text
+
+
+async def test_generic_worker_registration_is_quarantined_until_capability_grant(db_session):
+    server = load_mcp_server_module()
+    from app.domain.actors import Actor
+    from app.services.mcp_clients import create_client_token
+
+    issued = await create_client_token(
+        db_session,
+        agent_id="worker",
+        client_label="Vendor-neutral adapter",
+        host_fingerprint="adapter-host",
+        actor=Actor(kind="telegram", id="111"),
+    )
+    await db_session.commit()
+    client = await server.authenticate_http_bearer_token(f"Bearer {issued.token}")
+    context = server._mcp_client.set(client)
+    try:
+        names = [tool.name for tool in await server.handle_list_tools()]
+        prompts = await server.handle_list_prompts()
+        blocked = await server.handle_call_tool("tasks_claim", {"task_id": "task-1234"})
+    finally:
+        server._mcp_client.reset(context)
+
+    assert "tasks_get" in names
+    assert "tasks_claim" not in names
+    assert "tasks_worker_next" not in names
+    assert "proxmox_version" not in names
+    assert prompts == []
+    assert "worker_protocol_unavailable" in blocked[0].text
+
+
+async def test_stdio_revalidates_worker_conversion_before_discovery(monkeypatch):
+    server = load_mcp_server_module()
+    from app.db.models import McpClient
+
+    client_id = "11111111-1111-4111-8111-111111111111"
+    stale = McpClient(
+        id=client_id,
+        agent_id="codex",
+        client_label="Codex worker",
+        host_fingerprint="worker-host",
+        token_hash="hash",
+        token_hint="hint",
+        capabilities=[],
+        principal_id="",
+    )
+    converted = McpClient(
+        id=client_id,
+        agent_id="codex",
+        client_label="Codex worker",
+        host_fingerprint="worker-host",
+        token_hash="hash",
+        token_hint="hint",
+        capabilities=["task-worker.v1"],
+        principal_id=f"worker:{client_id}",
+    )
+
+    async def refreshed(_token, _agent_id=None):
+        return converted
+
+    monkeypatch.setattr(server, "authenticate_client_token", refreshed)
+    client_context = server._mcp_client.set(stale)
+    bearer_context = server._stdio_bearer_token.set("stdio-token")
+    try:
+        names = [tool.name for tool in await server.handle_list_tools()]
+        actor = server.get_mcp_actor()
+    finally:
+        server._stdio_bearer_token.reset(bearer_context)
+        server._mcp_client.reset(client_context)
+
+    assert actor.id == f"worker:{client_id}"
+    assert "tasks_get" in names
+    assert "tasks_claim" not in names
+    assert "tasks_worker_next" in names
+    assert "proxmox_version" in names
+
+
+async def test_worker_mcp_requires_lease_and_mutates_only_assigned_task(db_session):
+    import json
+
+    server = load_mcp_server_module()
+    from app.domain.actors import Actor
+    from app.services.mcp_clients import create_client_token, set_mcp_client_capabilities
+    from app.services.remediation_workers import assign_worker_task
+    from app.services.tasks_service import create_task
+
+    operator = Actor(kind="user", id="operator")
+    issued = await create_client_token(
+        db_session,
+        agent_id="codex",
+        client_label="Codex remediation worker",
+        host_fingerprint="worker-host",
+        actor=operator,
+    )
+    await set_mcp_client_capabilities(
+        db_session,
+        client_id=issued.client.id,
+        capabilities=["task-worker.v1"],
+        actor=operator,
+        confirm_worker_conversion=True,
+    )
+    task = await create_task(db_session, "repair", "investigate service", operator)
+    task, job = await assign_worker_task(
+        db_session,
+        task_id=task.id,
+        client_id=issued.client.id,
+        actor=operator,
+        expected_version=task.version,
+    )
+    await db_session.commit()
+
+    client = await server.authenticate_http_bearer_token(f"Bearer {issued.token}")
+    context = server._mcp_client.set(client)
+    try:
+        missing = await server.handle_call_tool(
+            "tasks_set_status",
+            {
+                "task_id": task.id,
+                "status": "investigating",
+                "expected_version": task.version,
+            },
+        )
+        acquired = await server.handle_call_tool("tasks_worker_next", {})
+        lease = json.loads(acquired[0].text)["result"]["job"]
+        wrong = await server.handle_call_tool(
+            "tasks_set_status",
+            {
+                "task_id": task.id,
+                "status": "investigating",
+                "expected_version": task.version,
+                "worker_job_id": job.id,
+                "worker_lease_token": "wrong-token-value",
+            },
+        )
+        changed = await server.handle_call_tool(
+            "tasks_set_status",
+            {
+                "task_id": task.id,
+                "status": "investigating",
+                "expected_version": task.version,
+                "worker_job_id": job.id,
+                "worker_lease_token": lease["lease_token"],
+            },
+        )
+    finally:
+        server._mcp_client.reset(context)
+
+    assert "invalid_worker_lease" in missing[0].text
+    assert "invalid_worker_lease" in wrong[0].text
+    changed_body = json.loads(changed[0].text)
+    assert changed_body["ok"] is True
+    assert changed_body["result"]["status"] == "investigating"
+    assert changed_body["result"]["assigned_agent"] == f"agent:worker:{issued.client.id}"
+
+
 async def test_build_streamable_http_app(monkeypatch):
     server = load_mcp_server_module()
+    captured = {}
+
+    class CapturingSessionManager:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        async def handle_request(self, scope, receive, send):
+            raise AssertionError("request handling is outside this construction test")
+
+        @asynccontextmanager
+        async def run(self):
+            yield
+
+    monkeypatch.setattr(server, "StreamableHTTPSessionManager", CapturingSessionManager)
     monkeypatch.setenv("MCP_HTTP_PATH", "/mcp/")
     monkeypatch.setenv("MCP_HTTP_ALLOWED_HOSTS", "10.0.0.111:8765,localhost:8765")
     from app.core.settings import get_settings
@@ -124,6 +364,25 @@ async def test_build_streamable_http_app(monkeypatch):
     paths = {route.path for route in app.routes}
     assert "/health" in paths
     assert "/mcp" in paths
+    assert captured["stateless"] is False
+    assert captured["session_idle_timeout"] == 1800
+
+
+def test_streamable_http_has_bounded_graceful_shutdown(monkeypatch):
+    server = load_mcp_server_module()
+    import uvicorn
+
+    captured = {}
+
+    def fake_run(app, **kwargs):
+        captured["app"] = app
+        captured.update(kwargs)
+
+    monkeypatch.setattr(uvicorn, "run", fake_run)
+    server.run_streamable_http()
+
+    assert captured["timeout_graceful_shutdown"] == 60
+    assert captured["log_level"] == "info"
 
 
 async def test_client_token_validation(db_session):
@@ -279,6 +538,77 @@ def _fake_write_tool(monkeypatch, approved: bool = True):
     if approved:
         monkeypatch.setitem(APPROVED_WRITE_TOOLS, tool.id, "docs/decisions/0004.md")
     return tool
+
+
+async def test_worker_approval_request_is_lease_bound(db_session, monkeypatch):
+    import json
+
+    server = load_mcp_server_module()
+    tool = _fake_write_tool(monkeypatch, approved=True)
+    from app.domain.actors import Actor
+    from app.services.mcp_clients import create_client_token, set_mcp_client_capabilities
+    from app.services.remediation_workers import assign_worker_task, worker_next
+    from app.services.tasks_service import create_task
+
+    async def no_notify(_approval, _safe_input):
+        return False
+
+    monkeypatch.setattr("app.services.approvals_service._notify_operator", no_notify)
+    operator = Actor(kind="user", id="operator")
+    issued = await create_client_token(
+        db_session,
+        agent_id="codex",
+        client_label="approval worker",
+        host_fingerprint="approval-host",
+        actor=operator,
+    )
+    await set_mcp_client_capabilities(
+        db_session,
+        client_id=issued.client.id,
+        capabilities=["task-worker.v1"],
+        actor=operator,
+        confirm_worker_conversion=True,
+    )
+    task = await create_task(db_session, "approved repair", "request write", operator)
+    task, job = await assign_worker_task(
+        db_session,
+        task_id=task.id,
+        client_id=issued.client.id,
+        actor=operator,
+    )
+    acquired = await worker_next(db_session, client_id=issued.client.id)
+    lease = acquired["job"]
+    await db_session.commit()
+
+    client = await server.authenticate_http_bearer_token(f"Bearer {issued.token}")
+    context = server._mcp_client.set(client)
+    try:
+        missing = await server.handle_call_tool(
+            "approvals_request",
+            {"tool_id": tool.id, "input": {}, "task_id": task.id},
+        )
+        valid = await server.handle_call_tool(
+            "approvals_request",
+            {
+                "tool_id": tool.id,
+                "input": {},
+                "task_id": task.id,
+                "worker_job_id": job.id,
+                "worker_lease_token": lease["lease_token"],
+            },
+        )
+    finally:
+        server._mcp_client.reset(context)
+
+    assert "invalid_worker_lease" in missing[0].text
+    body = json.loads(valid[0].text)
+    assert body["ok"] is True
+    assert body["result"]["task_id"] == task.id
+    from app.db.models import Approval
+
+    approval = await db_session.get(Approval, body["result"]["id"])
+    assert approval.worker_job_id == job.id
+    assert approval.worker_lease_generation == job.lease_generation
 
 
 async def test_discovery_exposes_approval_tools_and_approved_writes(monkeypatch):

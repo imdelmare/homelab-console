@@ -4,6 +4,24 @@ Homelab Console is a Python and React control plane intended to run close to the
 infrastructure it manages. PostgreSQL stores canonical state; provider adapters
 reach declared systems through narrow, typed tools.
 
+## See the workflow first
+
+Start with the [Product Tour](./product-tour.md) to follow one synthetic incident
+from the control room to task evidence, operator approval, and audit. It is the
+fastest way to understand what the system does before reading implementation or
+deployment details.
+
+The first useful path in a configured console is:
+
+```text
+Open Overview
+  → inspect one provider observation
+  → run a read-only summary tool
+  → review the resulting task evidence
+  → pair an MCP client
+  → inspect the audited invocation
+```
+
 ## Repository map
 
 | Path | Purpose |
@@ -11,23 +29,25 @@ reach declared systems through narrow, typed tools.
 | `apps/api` | FastAPI control plane, execution core, providers, and workers |
 | `apps/web` | React operator desktop |
 | `apps/mcp` | MCP adapter over stdio and streamable HTTP |
-| `apps/sentinel` | Independent external availability sentinel |
+| [External Sentinel](https://github.com/imdelmare/homelab-console-sentinel) | Independently released availability sentinel |
 | `config` | Inventory examples and local-only provider configuration |
 | `docs` | Canonical architecture, security, and operating documentation |
 | `deploy` | systemd, Caddy, and fallback container definitions |
 
 ## Read the system before deploying it
 
-1. Start with [Architecture](./architecture.md) and the five-plane model.
-2. Review the non-negotiable boundaries in [Security](./security.md).
-3. Understand identities and sessions in [Authentication](./authentication.md).
-4. Learn how external agents connect through the [MCP adapter](./mcp.md).
-5. Review the normalized integration contracts in [Providers](./providers.md).
+1. Start with the [Product Tour](./product-tour.md) and the operator workflow.
+2. Continue with [Architecture](./architecture.md) and the five-plane model.
+3. Review the non-negotiable boundaries in [Security](./security.md).
+4. Understand identities and sessions in [Authentication](./authentication.md).
+5. Learn how external agents connect through the [MCP adapter](./mcp.md).
+6. Review the normalized integration contracts in [Providers](./providers.md).
 
 ## Local validation
 
-The API requires Python 3.12 or newer and PostgreSQL. The web application uses
-Node.js and npm.
+The API and MCP adapter support Python 3.12 and 3.13 and require PostgreSQL.
+Python 3.14 is not supported by the current FastAPI/Starlette compatibility
+window. The web application uses Node.js and npm.
 
 ```bash
 cd apps/api

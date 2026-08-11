@@ -770,6 +770,34 @@ async def test_web_conversation_status_endpoint(client, user, capture_adapter):
     assert body["max_tool_calls"] == 3
 
 
+async def test_conversation_gate_disables_status_and_rejects_before_persistence(
+    db_session, monkeypatch
+):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "conversation_enabled", False)
+    model = FailingModel()
+
+    status = conversation_status()
+    assert status.enabled is False
+    assert status.configured is False
+    assert status.reason == "conversation_disabled"
+    assert status.model == ""
+
+    with pytest.raises(ConversationError) as exc_info:
+        await handle_conversation_message(
+            db_session,
+            channel="web",
+            user_ref="operator",
+            content="Stato del lab",
+            actor=OPERATOR,
+            model=model,
+        )
+
+    assert exc_info.value.code == "conversation_disabled"
+    assert model.calls == 0
+    assert (await db_session.execute(select(ConversationMessage))).scalars().all() == []
+
+
 async def test_opencode_fallback_success_does_not_call_ai_manager(monkeypatch):
     primary = CountingModel([ConversationDecision(assistant_reply="OpenCode reply")])
     fallback = CountingModel([ConversationDecision(assistant_reply="AI Manager fallback")])

@@ -7,11 +7,11 @@ hero:
   tagline: Build a governed control plane where humans, automation, and AI agents share one narrow, auditable tool surface.
   actions:
     - theme: brand
+      text: See the product
+      link: /product-tour
+    - theme: alt
       text: Start here
       link: /getting-started
-    - theme: alt
-      text: Understand the architecture
-      link: /architecture
 
 features:
   - title: One execution core
@@ -33,6 +33,13 @@ typed capabilities instead of arbitrary commands, URLs, or provider payloads.
 Use this manual to understand the trust boundaries, deploy your own instance,
 connect an MCP client, and extend the provider catalog without weakening the
 execution contract.
+
+## From signal to audited action
+
+[![Homelab Console overview with synthetic provider, incident, task, MCP, and watcher data.](/product-tour/overview.webp)](/product-tour)
+
+Follow a synthetic incident through evidence collection, an input-bound
+approval, and the final audit trail in the [product tour](./product-tour.md).
 
 ::: tip SOURCE OF TRUTH
 These pages are generated from the Markdown documentation maintained beside the

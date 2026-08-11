@@ -1,4 +1,5 @@
 import { defineConfig } from "vitepress";
+import { fileURLToPath } from "node:url";
 
 const base = process.env.DOCS_BASE || "/docs/";
 const repository = "https://github.com/imdelmare/homelab-mcp";
@@ -8,10 +9,15 @@ export default defineConfig({
   description: "Documentation for the AI-native homelab control plane.",
   base,
   srcDir: "content",
+  vite: {
+    // The generated Markdown tree is disposable, while curated screenshots
+    // remain versioned under apps/docs/public.
+    publicDir: fileURLToPath(new URL("../public", import.meta.url)),
+  },
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ["meta", { name: "theme-color", content: "#f45d22" }],
+    ["meta", { name: "theme-color", content: "#060084" }],
     ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:title", content: "Homelab Console Field Manual" }],
   ],
@@ -23,6 +29,7 @@ export default defineConfig({
     siteTitle: "HC / Field Manual",
     nav: [
       { text: "Start", link: "/getting-started" },
+      { text: "Product Tour", link: "/product-tour" },
       { text: "Architecture", link: "/architecture" },
       { text: "MCP Clients", link: "/mcp" },
       { text: "Security", link: "/security" },
@@ -34,6 +41,7 @@ export default defineConfig({
         items: [
           { text: "Field manual", link: "/" },
           { text: "Getting started", link: "/getting-started" },
+          { text: "Product tour", link: "/product-tour" },
         ],
       },
       {

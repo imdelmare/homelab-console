@@ -512,6 +512,11 @@ async def handoff_operator_task_to_client(
         raise TaskServiceError("unknown_client", "unknown MCP client")
     if not _is_recent_mcp_client(client):
         raise TaskServiceError("client_offline", "MCP client is not currently online")
+    if client.principal_id.startswith("worker:"):
+        raise TaskServiceError(
+            "worker_client_requires_assignment",
+            "remediation workers require the dedicated assignment and lease workflow",
+        )
     target_owner = f"agent:{client.agent_id}"
     if target_owner not in VALID_AGENT_IDS:
         raise TaskServiceError("invalid_input", "MCP client agent cannot own tasks")

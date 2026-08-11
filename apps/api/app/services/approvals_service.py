@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import get_settings
-from app.db.models import Approval, utcnow
+from app.db.models import Approval, TaskWorkerJob, utcnow
 from app.domain.actors import Actor
 from app.services.audit import write_audit
 from app.services.inventory import provider_config
@@ -84,6 +84,7 @@ async def request_approval(
     raw_input: dict | None,
     actor: Actor,
     task_id: str | None = None,
+    worker_job: TaskWorkerJob | None = None,
     source: str = "rest",
 ) -> Approval:
     tool = get_tool(tool_id)
@@ -104,6 +105,8 @@ async def request_approval(
         action=_action_summary(tool_id, safe_input),
         input_hash=input_digest(validated),
         requested_by=actor.audit_id(),
+        worker_job_id=worker_job.id if worker_job else None,
+        worker_lease_generation=worker_job.lease_generation if worker_job else None,
         expires_at=utcnow() + timedelta(seconds=settings.approval_ttl_seconds),
     )
     db.add(approval)

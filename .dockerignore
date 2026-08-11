@@ -1,0 +1,40 @@
+# Community Compose images are built only from the three core applications and
+# deployment definitions. Optional application sources, local configuration,
+# credentials and workstation build artifacts never enter the build context.
+**
+!apps/
+!apps/api/
+!apps/api/app/
+!apps/api/app/**
+!apps/api/migrations/
+!apps/api/migrations/**
+!apps/api/alembic.ini
+!apps/api/requirements.txt
+!apps/api/requirements-prod.txt
+!apps/mcp/
+!apps/mcp/requirements.txt
+!apps/mcp/server.py
+!apps/web/
+!apps/web/src/
+!apps/web/src/**
+!apps/web/index.html
+!apps/web/package.json
+!apps/web/package-lock.json
+!apps/web/tsconfig.json
+!apps/web/vite.config.ts
+!deploy/
+!deploy/Dockerfile.api
+!deploy/Dockerfile.mcp
+!deploy/Dockerfile.web
+!deploy/nginx.conf
+
+# Re-exclude ignored descendants after opening their parent directories above;
+# Docker's pattern traversal can otherwise include local build trees.
+apps/**/.venv/
+apps/**/__pycache__/
+apps/**/.pytest_cache/
+apps/**/node_modules/
+apps/**/dist/
+apps/**/build/
+apps/**/test-results/
+apps/**/.playwright-cli/

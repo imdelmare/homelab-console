@@ -1,7 +1,7 @@
 fastapi==0.116.1
 uvicorn[standard]==0.35.0
 pydantic-settings==2.10.1
-python-dotenv==1.1.1
+python-dotenv==1.2.2
 PyYAML==6.0.2
 httpx==0.28.1
 SQLAlchemy>=2.0.43

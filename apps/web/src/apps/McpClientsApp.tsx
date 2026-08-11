@@ -10,6 +10,7 @@ import {
   forgetMcpClient,
   revokeMcpClient,
   rotateMcpClient,
+  setMcpClientCapabilities,
   startMcpPairing,
 } from "../lib/api";
 import { formatDateTime, parseApiDate } from "../lib/format";
@@ -19,7 +20,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PanelLoadingScreen } from "../components/PanelLoadingScreen";
 import type { McpClient, McpPairingStart } from "../lib/types";
 
-type McpAgentId = "codex" | "claude" | "fixer" | "cline" | "opencode";
+type McpAgentId = "codex" | "claude" | "fixer" | "cline" | "opencode" | "worker";
 
 const MCP_ENDPOINT = import.meta.env.VITE_MCP_ENDPOINT ?? `http://${window.location.hostname}:8765/mcp/`;
 
@@ -30,6 +31,7 @@ function onboardingPrompt(agentId: McpAgentId, endpoint: string) {
     fixer: "Store the dedicated token only in the Fixer OpenCode profile. Follow docs/OPENCODE_WORKER.md and never claim open work.",
     cline: "Add the URL and Authorization header to Cline's MCP HTTP configuration.",
     opencode: "Configure type=remote, OAuth=false, and read the bearer token from HOMELAB_MCP_TOKEN.",
+    worker: "Use this registration only for a remediation adapter. Grant task-worker.v1 after pairing; it cannot claim tasks before conversion.",
   };
   return `Connect ${agentId} to Homelab Console MCP.
 
@@ -50,6 +52,7 @@ const MCP_DEFAULT_LABELS: Record<McpAgentId, string> = {
   fixer: "Fixer",
   cline: "Cline workstation",
   opencode: "OpenCode workstation",
+  worker: "Remediation worker",
 };
 
 export function McpClientsApp() {
@@ -74,6 +77,8 @@ export function McpClientsApp() {
   const [pairingToken, setPairingToken] = useState<{ client: McpClient; token: string; endpoint: string } | null>(null);
   const [rotatingId, setRotatingId] = useState<string | null>(null);
   const [rotatedToken, setRotatedToken] = useState<{ client: McpClient; token: string } | null>(null);
+  const [capabilityTarget, setCapabilityTarget] = useState<McpClient | null>(null);
+  const [capabilityBusy, setCapabilityBusy] = useState(false);
   const [activeRegistryTab, setActiveRegistryTab] = useState<"clients" | "requests" | "pairing">("clients");
 
   function refresh() {
@@ -228,6 +233,26 @@ export function McpClientsApp() {
     }
   }
 
+  async function confirmWorkerCapability() {
+    if (!capabilityTarget) return;
+    const workerEnabled = capabilityTarget.capabilities.includes("task-worker.v1");
+    setCapabilityBusy(true);
+    setActionError(null);
+    try {
+      await setMcpClientCapabilities(
+        capabilityTarget.id,
+        workerEnabled ? [] : ["task-worker.v1"],
+        !workerEnabled,
+      );
+      setCapabilityTarget(null);
+      invalidateRegistry();
+    } catch (error) {
+      setActionError(describeError(error));
+    } finally {
+      setCapabilityBusy(false);
+    }
+  }
+
   const activeClients = clients.filter((client) => !client.revoked_at);
   const onlineClients = activeClients.filter((client) => isMcpClientOnline(client));
   const shownError = clientsQuery.errorMessage ?? pairingQuery.errorMessage ?? actionError;
@@ -276,6 +301,7 @@ export function McpClientsApp() {
             <option value="fixer">Fixer</option>
             <option value="cline">Cline</option>
             <option value="opencode">OpenCode</option>
+            <option value="worker">Remediation worker</option>
           </SelectControl>
         </div>
         <form className="mcp-pairing-form mcp-guided-pairing" onSubmit={handleStartPairing}>
@@ -377,6 +403,8 @@ export function McpClientsApp() {
         {clients.map((client) => {
           const online = isMcpClientOnline(client);
           const revoked = Boolean(client.revoked_at);
+          const workerEnabled = client.capabilities.includes("task-worker.v1");
+          const workerPrincipal = client.principal_id.startsWith("agent:worker:");
           return (
             <article className={`item-row item-row-stacked mcp-client-row ${revoked ? "mcp-client-revoked" : ""}`} key={client.id}>
               <div className="mcp-client-identity">
@@ -392,6 +420,11 @@ export function McpClientsApp() {
                   token *{client.token_hint || "--------"} · created {formatDateTime(client.created_at)} · last activity{" "}
                   {formatDateTime(client.last_seen_at)}
                 </small>
+                {workerPrincipal && (
+                  <small>
+                    remediation worker · {workerEnabled ? "eligible for assignment" : "capability disabled"}
+                  </small>
+                )}
                 {client.revoked_reason && <small>revoked: {client.revoked_reason}</small>}
               </div>
               </div>
@@ -409,6 +442,13 @@ export function McpClientsApp() {
                   </Button>
                 ) : (
                   <>
+                    <Button
+                      type="button"
+                      disabled={capabilityBusy}
+                      onClick={() => setCapabilityTarget(client)}
+                    >
+                      {workerEnabled ? "Disable worker" : workerPrincipal ? "Enable worker" : "Convert to worker"}
+                    </Button>
                     <Button
                       type="button"
                       disabled={revokingId === client.id}
@@ -456,6 +496,22 @@ export function McpClientsApp() {
           busy={Boolean(forgettingId)}
           onConfirm={confirmForget}
           onCancel={() => setForgetTarget(null)}
+        />
+      )}
+      {capabilityTarget && (
+        <ConfirmDialog
+          title={capabilityTarget.capabilities.includes("task-worker.v1") ? "Disable remediation worker" : "Enable remediation worker"}
+          message={
+            capabilityTarget.capabilities.includes("task-worker.v1")
+              ? `Disable worker assignment for ${capabilityTarget.client_label || capabilityTarget.id.slice(0, 8)}? Active worker jobs will be closed and non-final tasks released.`
+              : capabilityTarget.principal_id.startsWith("agent:worker:")
+                ? `Re-enable task-worker.v1 for ${capabilityTarget.client_label || capabilityTarget.id.slice(0, 8)}?`
+                : `Permanently convert ${capabilityTarget.client_label || capabilityTarget.id.slice(0, 8)} to a dedicated remediation worker? This token cannot later return to an interactive identity.`
+          }
+          confirmLabel={capabilityTarget.capabilities.includes("task-worker.v1") ? "Disable worker" : "Enable worker"}
+          busy={capabilityBusy}
+          onConfirm={confirmWorkerCapability}
+          onCancel={() => setCapabilityTarget(null)}
         />
       )}
       {rotatedToken && (
