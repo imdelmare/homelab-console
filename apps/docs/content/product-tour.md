@@ -1,58 +1,91 @@
 # Product Tour
 
 Homelab Console turns infrastructure observations into a workflow a human can
-inspect and control. This tour follows one synthetic DNS incident from detection
-to evidence, approval, and audit. No live inventory or operator data appears in
-these screenshots.
+inspect and control. The operator console is a framework-free TypeScript/Vite
+application with a minimal **Quiet Operations** interface. It is organized as a
+ledger, not a card-heavy monitoring dashboard.
 
-## Start in the control room
+## Start in Inbox
 
-[![The Homelab Console overview showing provider health, incidents, tasks, MCP clients, watcher activity, and an operational runbook.](/product-tour/overview.webp)](/product-tour/overview.webp)
+**Inbox** is the default section. Its status rail summarizes healthy systems,
+critical incidents, tasks needing attention and pending approvals. The list
+contains only open operational work and links directly to canonical records.
 
-The Overview window brings together provider health, open incidents, the task
-queue, connected MCP clients, watcher activity, and read-only runbook guidance.
-It is an operational index rather than a second monitoring system: each card
-leads to the canonical provider, task, or audit record behind it.
+The console polls bounded read endpoints while visible, pauses background work
+when the browser tab is hidden and resumes on focus. Sidebar badges expose
+attention counts without turning every section into a dashboard.
+
+## Inspect the affected system
+
+**Systems** lists configured providers and their normalized health states. A
+provider detail contains:
+
+- summary status, timestamps, driver, transport and watchers;
+- governed read/write capabilities from the tool registry;
+- normalized capability observations;
+- a direct investigation-task action for unhealthy providers.
+
+**Topology** complements Systems with declared physical relationships and a
+failure-impact view. Neither section scans arbitrary hosts or exposes raw
+provider responses.
+
+## Work an incident
+
+**Incidents** is separate from watcher configuration. It shows severity,
+provider, watcher, recurrence, first/last observation and the linked task. An
+operator can mark an incident already handled only with an explicit note.
+
+**Watchers** owns schedules, thresholds, investigation mode, manual execution
+and the recent run ledger. This separation keeps detection configuration apart
+from incident response.
 
 ## Preserve evidence in a task
 
-[![A task investigation showing ownership, lifecycle controls, a summarized finding, and synthetic evidence.](/product-tour/task-evidence.webp)](/product-tour/task-evidence.webp)
+**Tasks** is the durable handoff boundary between operators, interactive MCP
+clients and remediation workers. A task carries ownership, findings, checks,
+invocation evidence, lifecycle history and bounded root-cause context.
 
-Tasks are the durable handoff boundary between operators and agents. A task can
-carry ownership, findings, checks, invocation evidence, lifecycle history, and a
-bounded root-cause context. Agents can hand work to one another without making a
-chat transcript the source of truth.
+Task mutations use backend-validated transitions and generation/version checks.
+The interface never treats local UI state as proof that a mutation succeeded.
 
-## Keep the human in charge of writes
+## Run a governed tool
 
-[![The Approvals window showing waiting, consumed, and denied write requests.](/product-tour/approvals.webp)](/product-tour/approvals.webp)
+**Tools** exposes the declared catalog with provider, mode, risk and availability
+filters. Inputs are generated from each tool's JSON Schema and converted through
+the same typed frontend helpers used by tests.
 
-Infrastructure writes are not unlocked by connecting an agent. Every write
-requires a fresh approval for one exact tool invocation and input. The operator
-can approve or deny it in the console or through Telegram; approvals expire and
-cannot be replayed.
+Read tools execute through the shared core. Write or high-risk tools stop at the
+single-use approval boundary; the browser requests approval, polls its state and
+executes only after receiving an approved id bound to the exact input.
 
-## Inspect the complete audit trail
+## Keep the human in charge
 
-[![The Audit Log showing a successful tool invocation, an approval request, a task finding, and approval decisions.](/product-tour/audit.webp)](/product-tour/audit.webp)
+**Approvals** shows waiting and historical requests with live expiry countdowns.
+Approve requires an explicit confirmation; deny is immediate. The same backend
+decision path is used by Telegram inline buttons.
 
-REST, Telegram, watchers, and MCP clients converge on the same audit model. The
-log attributes each event to an actor and source, links it to tools and tasks,
-and stores only normalized, redacted metadata suitable for operational review.
+**MCP Clients** manages Telegram pairing, per-client identity, token rotation and
+revocation. Newly issued or rotated bearer tokens are shown once. Conversion to
+the privileged `task-worker.v1` capability requires a dedicated confirmation.
 
-## What the tour demonstrates
+## Inspect delivery and attribution
 
-1. A watcher reports a bounded observation and opens an incident.
-2. The incident is represented by a persistent task with explicit ownership.
-3. Read-only tools collect normalized evidence through the execution core.
-4. A write request stops at the approval boundary until the operator decides.
-5. Task, approval, and execution events remain attributable in the audit log.
+**Metrics** separates technical reliability, reviewed routing accuracy, review
+coverage, metering and attributed cost. **AI Delivery** presents normalized
+conversation-route outcomes independently from Task Router quality.
 
-::: info SYNTHETIC DATA
-The product-tour dataset is fictional and was rendered through the real web
-interface. Hostnames, identifiers, timestamps, provider states, and operational
-events were created exclusively for these screenshots.
-:::
+**Activity** is the append-only, redacted audit trail. REST, Telegram, watchers
+and MCP clients converge on the same actor/source model and link events back to
+tools and tasks.
+
+## What this workflow demonstrates
+
+1. A watcher records a bounded observation and opens an incident.
+2. Inbox surfaces the incident without becoming a second monitoring system.
+3. The incident links to persistent task evidence and explicit ownership.
+4. Tools collect normalized evidence through the shared execution core.
+5. An infrastructure write waits for one exact operator approval.
+6. Task, approval and execution events remain attributable in Activity.
 
 Continue with [Architecture](./architecture.md) for the five-plane model or
 [Security](./security.md) for the trust boundaries behind this workflow.

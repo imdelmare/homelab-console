@@ -17,6 +17,8 @@
 !apps/web/
 !apps/web/src/
 !apps/web/src/**
+!apps/web/src-vanilla/
+!apps/web/src-vanilla/**
 !apps/web/index.html
 !apps/web/package.json
 !apps/web/package-lock.json

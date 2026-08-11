@@ -23,8 +23,8 @@ Homelab Console is organized around five planes with distinct trust levels.
   summary tools through `execute_tool`, records incidents, and creates
   deduplicated tasks. It does not run models, execute fixes, or bypass the
   tool plane.
-- **Operator plane** — how a human reaches the system: the Win98-style web
-  desktop (apps/web), the Telegram bot (status, approvals, model
+- **Operator plane** — how a human reaches the system: the framework-free
+  TypeScript/Vite web console (apps/web), the Telegram bot (status, approvals, model
   switching), and MCP clients (apps/mcp) speaking the same tool surface over
   stdio or HTTP.
 
@@ -139,8 +139,8 @@ changes.
 ## Conversation Service
 
 Telegram free text and the authenticated `/api/conversations/*` endpoints share
-one channel-neutral Conversation Service. The desktop Chat app is not currently
-registered in the web UI. The service can call only a small allowlist of
+one channel-neutral Conversation Service. A Chat section is not currently
+registered in the web console. The service can call only a small allowlist of
 summary and task tools, and summary-tool execution still goes through the
 shared `execute_tool` core. It receives compact context only: the current user
 message, bounded recent history, the allowed tool catalog, an optional current
@@ -207,7 +207,7 @@ external OpenCode, Codex or future adapters own only their isolated agent
 runtime. The legacy OpenCode Fixer remains a rollback boundary until the first
 external pull adapter passes conformance.
 
-The **Metrics** window adds immutable per-component usage rows and explicit operator
+The **Metrics** section adds immutable per-component usage rows and explicit operator
 reviews. Technical success, reviewed accuracy and review coverage remain
 separate metrics. Token-based cost is stored with the price snapshot used at
 the time and is labelled attributed cost, not invoice-reconciled spend. See

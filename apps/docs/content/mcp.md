@@ -74,7 +74,7 @@ or `worker`), label, fingerprint, dashboard row, and `last_seen_at`.
 The operator-managed HTTP onboarding flow is the same for Codex, Claude,
 Cline and OpenCode:
 
-1. In the **MCP Clients** window, the operator selects the agent and enters its
+1. In the **MCP Clients** section, the operator selects the agent and enters its
    label and host fingerprint.
 2. The dashboard calls `POST /api/mcp/pairing/start`.
 3. The backend sends an approve/deny prompt to the authorized Telegram chat.
@@ -105,7 +105,7 @@ compatibility, but the generic identity avoids core changes for a new engine.
 `client_label` is what the dashboard shows. `host_fingerprint` should be stable
 for that machine; the hostname is enough for this homelab setup.
 
-The **MCP Clients** window can start this flow directly: choose Codex, Claude,
+The **MCP Clients** section can start this flow directly: choose Codex, Claude,
 Fixer, Cline, OpenCode or Remediation worker, enter the label and host fingerprint, click **Start Telegram pairing**,
 then approve the Telegram request. The UI checks approval immediately and then
 every 2 seconds until the request is approved or expires; **Check approval**
@@ -129,7 +129,7 @@ starting pairing from the dashboard:
 ```text
 Connect to Homelab Console MCP over its Cloudflare Tunnel HTTPS endpoint.
 
-The operator performs Telegram pairing in the MCP Clients window and will
+The operator performs Telegram pairing in the MCP Clients section and will
 provide the per-client hmc_... token exactly once. Do not call the internal
 /api/mcp/pairing endpoints yourself.
 
@@ -212,7 +212,7 @@ window; otherwise it shows as `idle` even though the token is still valid.
 
 Use the dashboard revoke action to disable one client without affecting the
 others. Revoked clients immediately fail MCP HTTP authentication with `401`.
-The **MCP Clients** window also contains copyable onboarding prompts for Codex,
+The **MCP Clients** section also contains copyable onboarding prompts for Codex,
 Claude, Cline and OpenCode, all using the same Telegram pairing flow and HTTP endpoint.
 The dashboard can start/check a pairing request, revoke a client, or rotate one
 client's bearer token. Rotation updates the stored token hash in place,
@@ -279,7 +279,7 @@ adapter and to task ownership.)
   ADR-approved) are listed with an extra optional `approval_id` input.
 - **Write approvals**: an agent requests approval for one exact invocation
   with `approvals.request(tool_id, input, task_id?)`; the operator decides on
-  Telegram (inline buttons) or in the console Approvals window. The agent
+  Telegram (inline buttons) or in the console Approvals section. The agent
   polls `approvals.get` and, once approved, calls the tool with that
   `approval_id` and the same input. Approvals are single-use, input-bound
   (SHA-256 of the validated input) and expire after `APPROVAL_TTL_SECONDS`

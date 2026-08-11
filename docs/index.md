@@ -36,10 +36,9 @@ state, approvals, and authority remain in the control plane.
 
 ## From a local question to an audited action
 
-[![Homelab Console overview with synthetic provider, incident, task, MCP, and watcher data.](/product-tour/overview.webp)](/product-tour)
-
-Follow a synthetic incident through bounded evidence collection, an input-bound
-approval, and the final audit trail in the [product tour](./product-tour.md).
+Follow an incident from the Quiet Operations Inbox through bounded evidence
+collection, an input-bound approval, and the final Activity record in the
+[product tour](./product-tour.md).
 
 When you need another interface, MCP remains available for authenticated Claude,
 Codex, OpenCode, Cline, and other compatible clients. They use the same tools and

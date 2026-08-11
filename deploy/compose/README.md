@@ -2,7 +2,10 @@
 
 This is the supported model-independent Homelab Console deployment. It starts
 only PostgreSQL, API, web and MCP HTTP. It does not install or start Sentinel,
-LAN models, Ollama, Fixer or OpenCode.
+LAN models, Ollama, the legacy Fixer or an external remediation worker.
+Conversation Service, Task Router inference and Telegram media analysis are
+disabled in both Compose contracts; the core remains healthy without an AI
+runtime.
 
 ## Prepare
 
@@ -76,20 +79,27 @@ commit. The command refuses to create another account when one already exists.
 
 ## Operations
 
+Set `COMPOSE_FILE` to the contract used for this installation:
+
 ```bash
+COMPOSE_FILE=deploy/compose/compose.yaml
+# For published images instead:
+# COMPOSE_FILE=deploy/compose/compose.ghcr.yaml
+
 # Health through the web proxy
+# Replace 8080 if WEB_PORT has been changed in .env.compose.
 curl --fail http://127.0.0.1:8080/health
 
 # Logs
-docker compose -f deploy/compose/compose.yaml --env-file .env.compose logs -f api
+docker compose -f "$COMPOSE_FILE" --env-file .env.compose logs -f api
 
 # Logical database backup
-docker compose -f deploy/compose/compose.yaml --env-file .env.compose \
+docker compose -f "$COMPOSE_FILE" --env-file .env.compose \
   exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' \
   > homelab-console.backup
 
 # Stop without deleting state
-docker compose -f deploy/compose/compose.yaml --env-file .env.compose down
+docker compose -f "$COMPOSE_FILE" --env-file .env.compose down
 ```
 
 Never add `-v` to `down` unless the PostgreSQL data is intentionally being

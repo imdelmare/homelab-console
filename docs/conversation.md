@@ -1,8 +1,8 @@
 # Conversation Service
 
 The Conversation Service is the lightweight natural-language layer used by
-Telegram chat, the Operations panel and authenticated REST endpoints. The desktop Chat app is
-not currently registered in the web UI. It is intentionally separate from the
+Telegram chat, the Operations panel and authenticated REST endpoints. A Chat
+section is not currently registered in the web console. It is intentionally separate from the
 MCP agent workflow: it helps the operator ask questions, run a small set
 of read-oriented summary tools, and create or update Homelab Console tasks, but
 it never becomes an autonomous agent.
@@ -33,8 +33,8 @@ The service cannot:
 Current channels use the same backend service:
 
 - **Authenticated REST**: `POST /api/conversations/message`, authenticated with
-  the normal session + CSRF flow. No Chat app is currently registered in the
-  desktop UI, but the endpoint is already available for authenticated clients.
+  the normal session + CSRF flow. No Chat section is currently registered in the
+  web console, but the endpoint is already available for authenticated clients.
 - **Telegram free chat**: ordinary non-command text uses a one-decision,
   tool-free response contract. It receives no tool catalog or current task and
   cannot create or update tasks. When live data is needed, the reply directs

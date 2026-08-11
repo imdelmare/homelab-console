@@ -1,6 +1,6 @@
 # Metrics
 
-The **Metrics** desktop window separates three different questions that
+The **Metrics** section separates three different questions that
 must not be collapsed into one score:
 
 - **technical reliability**: successful Task Router responses divided by all
@@ -33,17 +33,17 @@ operational telemetry, never prompts or raw model output:
 
 The API process permits one llama.cpp inference at a time. This matches the
 single slot on `ai-host`; the recorded queue wait makes saturation visible.
-The Metrics window reports local response rate, OpenAI fallback rate, schema
+The Metrics section reports local response rate, OpenAI fallback rate, schema
 errors, timeouts, average and p95 latency, and effective model distribution.
 Historical rows remain valid but have no invented latency or version metadata.
 
 ## AI delivery
 
-The **AI Delivery** desktop window presents conversation turns separately from
+The **AI Delivery** section presents conversation turns separately from
 Task Router quality. One delivery row represents one completed or failed
 conversation turn, not one provider request: a turn that uses a governed tool
 can contain two model decisions, and its recorded model-path latency is the sum
-of those measured decisions. The window reports successful and failed turns,
+of those measured decisions. The section reports successful and failed turns,
 fallback rate, average/p95 path latency, effective provider/model distribution,
 and the latest 20 normalized delivery records.
 
@@ -80,7 +80,7 @@ The built-in `gpt-5.6-luna` standard price snapshot is dated 2026-07-09:
 $1.00/M input, $0.10/M cached input and $6.00/M output. See the
 [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
 
-The number in this window is **attributed cost**, calculated from response
+The number in this section is **attributed cost**, calculated from response
 usage. It is not labelled as billed cost. Financial reconciliation requires a
 separate, server-only integration with OpenAI's organization Costs endpoint
 and an Admin API key; that integration is intentionally not enabled in this
