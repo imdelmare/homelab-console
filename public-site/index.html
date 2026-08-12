@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Run your homelab privately with a small local AI. Homelab Console gives lightweight models typed tools, bounded context, approvals, and audit."
+      content="Make a small local model useful with deterministic summaries, typed tools, bounded context, approvals, and audit."
     />
     <meta name="theme-color" content="#f1eee5" />
     <meta property="og:title" content="Homelab Console" />
     <meta
       property="og:description"
-      content="The infrastructure layer that makes small local AI useful. No cloud AI required."
+      content="Reduce the problem before it reaches the model. Run locally when the workload allows it."
     />
     <meta property="og:type" content="website" />
     <title>Homelab Console</title>
@@ -462,6 +462,137 @@
         text-transform: uppercase;
       }
 
+      .benchmark-panel {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1.58fr);
+        border: 1px solid var(--line);
+      }
+
+      .benchmark-lead {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 38px;
+        padding: clamp(28px, 4vw, 54px);
+        color: var(--surface);
+        background: var(--dark);
+      }
+
+      .benchmark-lead strong {
+        display: block;
+        margin-top: 12px;
+        font-family: var(--font-display);
+        font-size: clamp(58px, 7vw, 92px);
+        font-weight: 500;
+        letter-spacing: -0.07em;
+        line-height: 0.82;
+      }
+
+      .benchmark-lead p {
+        margin: 0;
+        color: #aaa79d;
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .benchmark-data {
+        min-width: 0;
+        padding: clamp(24px, 4vw, 52px);
+        background: var(--surface);
+      }
+
+      .benchmark-table-wrap {
+        overflow-x: auto;
+      }
+
+      .benchmark-table {
+        width: 100%;
+        min-width: 680px;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .benchmark-table th,
+      .benchmark-table td {
+        padding: 15px 13px;
+        border-bottom: 1px solid var(--line);
+        text-align: right;
+      }
+
+      .benchmark-table th:first-child,
+      .benchmark-table td:first-child {
+        padding-left: 0;
+        text-align: left;
+      }
+
+      .benchmark-table th {
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .benchmark-table td {
+        font-size: 12px;
+      }
+
+      .benchmark-table td:first-child {
+        font-family: var(--font-display);
+        font-size: 16px;
+      }
+
+      .benchmark-table .benchmark-winner td {
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      .benchmark-proof {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 30px;
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
+      }
+
+      .benchmark-proof div {
+        display: grid;
+        gap: 7px;
+        padding: 18px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .benchmark-proof span {
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .benchmark-proof strong {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .benchmark-caveat {
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.65;
+      }
+
+      .benchmark-link {
+        display: inline-block;
+        margin-top: 22px;
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 700;
+        text-underline-offset: 4px;
+      }
+
       .workflow {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -765,6 +896,7 @@
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
 
+        .benchmark-panel,
         .evidence-grid,
         .closing {
           grid-template-columns: 1fr;
@@ -843,6 +975,10 @@
           grid-template-columns: 1fr;
         }
 
+        .benchmark-proof {
+          grid-template-columns: 1fr;
+        }
+
         .security-item,
         .security-item:nth-child(even) {
           border-right: 0;
@@ -898,6 +1034,7 @@
         </a>
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="#how-it-works">How it works</a>
+          <a href="#benchmark">Benchmark</a>
           <a href="#security">Security</a>
           <a href="https://github.com/imdelmare/homelab-console" target="_blank" rel="noopener noreferrer">GitHub</a>
           <a class="nav-cta" href="./docs/getting-started">Start locally</a>
@@ -907,11 +1044,11 @@
       <main id="main">
         <section class="hero" aria-labelledby="hero-title">
           <div class="hero-copy">
-            <p class="eyebrow">Local-first homelab control plane</p>
-            <h1 id="hero-title">A quiet place for the things that need <em>attention.</em></h1>
+            <p class="eyebrow">Small-model homelab control plane</p>
+            <h1 id="hero-title">Make a small local model <em>useful.</em></h1>
             <p class="hero-intro">
-              Give a small local AI typed tools, bounded context, and one governed path to your
-              infrastructure. The model reasons. Homelab Console keeps authority.
+              Reduce the problem before it reaches the model: deterministic summaries, typed
+              tools, bounded context, and one governed path to your infrastructure.
             </p>
             <div class="actions">
               <a class="button button-primary" href="./docs/getting-started">Run locally</a>
@@ -1003,10 +1140,56 @@
           </div>
         </section>
 
+        <section class="section" id="benchmark" aria-labelledby="benchmark-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-index">02 / Measured locally</p>
+              <h2 id="benchmark-title">Small won this round.</h2>
+            </div>
+            <p>
+              Same prompt, the same reduced catalog of 12 read-only MCP tools, and one execution
+              per route. Qwen 3.5 4B was fastest in all three tests and chose the expected tool 3/3 times.
+            </p>
+          </div>
+
+          <div class="benchmark-panel">
+            <aside class="benchmark-lead">
+              <div>
+                <span class="micro-label">Qwen 3.5 4B local</span>
+                <strong>11.9 s</strong>
+              </div>
+              <p>Fastest mean in the MCP Lite read-only run. Private inference, correct route selection, no substantive output issue.</p>
+            </aside>
+            <div class="benchmark-data">
+              <div class="benchmark-table-wrap">
+                <table class="benchmark-table">
+                  <thead>
+                    <tr><th>Model</th><th>General</th><th>Network</th><th>Uptime Kuma</th><th>Mean</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr class="benchmark-winner"><td>Qwen 3.5 4B local</td><td>16.8 s</td><td>10.9 s</td><td>8.0 s</td><td>11.9 s</td></tr>
+                    <tr><td>DeepSeek V4 Flash</td><td>21.3 s</td><td>12.2 s</td><td>8.4 s</td><td>14.0 s</td></tr>
+                    <tr><td>DeepSeek V4 Pro</td><td>28.2 s</td><td>12.8 s</td><td>11.0 s</td><td>17.3 s</td></tr>
+                    <tr><td>GPT-5.6 Luna Fast</td><td>31.3 s</td><td>18.2 s</td><td>19.2 s</td><td>22.9 s</td></tr>
+                    <tr><td>GPT-5.6 Sol</td><td>36.3 s</td><td>31.9 s</td><td>21.2 s</td><td>29.8 s</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="benchmark-proof" aria-label="Benchmark highlights">
+                <div><span>Correct tools</span><strong>3/3 for every model</strong></div>
+                <div><span>Qwen vs Pro</span><strong>About 31% faster</strong></div>
+                <div><span>Qwen vs Sol</span><strong>About 60% faster</strong></div>
+              </div>
+              <p class="benchmark-caveat">Directional result: one execution per test, deterministic summaries only. Complex diagnosis, correlation, remediation, and write workflows require a separate repeated benchmark.</p>
+              <a class="benchmark-link" href="./docs/benchmark">Read method, accuracy notes, ranking, and limits →</a>
+            </div>
+          </div>
+        </section>
+
         <section class="section" aria-labelledby="workflow-title">
           <div class="section-heading">
             <div>
-              <p class="section-index">02 / Governed execution</p>
+              <p class="section-index">03 / Governed execution</p>
               <h2 id="workflow-title">One path from intent to evidence.</h2>
             </div>
             <p>
@@ -1029,7 +1212,7 @@
         <section class="section" aria-labelledby="evidence-title">
           <div class="section-heading">
             <div>
-              <p class="section-index">03 / Operational evidence</p>
+              <p class="section-index">04 / Operational evidence</p>
               <h2 id="evidence-title">A diagnosis, not a science project.</h2>
             </div>
             <p>
@@ -1070,7 +1253,7 @@
         <section class="section" aria-labelledby="providers-title">
           <div class="section-heading">
             <div>
-              <p class="section-index">04 / Normalized systems</p>
+              <p class="section-index">05 / Normalized systems</p>
               <h2 id="providers-title">Your stack, one vocabulary.</h2>
             </div>
             <p>
@@ -1097,7 +1280,7 @@
         <section class="section" id="security" aria-labelledby="security-title">
           <div class="section-heading">
             <div>
-              <p class="section-index">05 / Trust model</p>
+              <p class="section-index">06 / Trust model</p>
               <h2 id="security-title">Small, imperfect, safely constrained.</h2>
             </div>
             <p>
