@@ -6,7 +6,7 @@ const repository = "https://github.com/imdelmare/homelab-console";
 
 export default defineConfig({
   title: "Homelab Console",
-  description: "Run your homelab privately with a small local AI.",
+  description: "Make a small local model useful with typed tools and bounded context.",
   base,
   srcDir: "content",
   vite: {
@@ -29,7 +29,8 @@ export default defineConfig({
     siteTitle: "Homelab Console",
     nav: [
       { text: "Start", link: "/getting-started" },
-      { text: "Local AI", link: "/conversation" },
+      { text: "Local Models", link: "/local-models" },
+      { text: "Benchmark", link: "/benchmark" },
       { text: "Product Tour", link: "/product-tour" },
       { text: "Providers", link: "/providers" },
       { text: "Internals", link: "/architecture" },
@@ -42,12 +43,13 @@ export default defineConfig({
           { text: "What is Homelab Console?", link: "/" },
           { text: "Getting started", link: "/getting-started" },
           { text: "Product tour", link: "/product-tour" },
+          { text: "MCP Lite benchmark", link: "/benchmark" },
         ],
       },
       {
         text: "Using Homelab Console",
         items: [
-          { text: "Local models", link: "/conversation" },
+          { text: "Local models", link: "/local-models" },
           { text: "Provider setup", link: "/providers" },
           { text: "Approvals and security", link: "/security" },
           { text: "Watchers", link: "/watchers" },
@@ -67,6 +69,7 @@ export default defineConfig({
           { text: "Architecture", link: "/architecture" },
           { text: "Security model", link: "/security" },
           { text: "Authentication", link: "/authentication" },
+          { text: "Conversation Service", link: "/conversation" },
           { text: "External Sentinel", link: "/sentinel" },
         ],
       },
