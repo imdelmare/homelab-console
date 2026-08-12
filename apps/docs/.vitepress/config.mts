@@ -17,16 +17,16 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ["meta", { name: "theme-color", content: "#060084" }],
+    ["meta", { name: "theme-color", content: "#f1eee5" }],
     ["meta", { property: "og:type", content: "website" }],
-    ["meta", { property: "og:title", content: "Homelab Console Field Manual" }],
+    ["meta", { property: "og:title", content: "Homelab Console" }],
   ],
   markdown: {
     lineNumbers: true,
     theme: { light: "github-light", dark: "github-dark" },
   },
   themeConfig: {
-    siteTitle: "HC / Field Manual",
+    siteTitle: "Homelab Console",
     nav: [
       { text: "Start", link: "/getting-started" },
       { text: "Local AI", link: "/conversation" },
@@ -76,8 +76,7 @@ export default defineConfig({
     outline: { level: [2, 3], label: "On this page" },
     lastUpdated: { text: "Updated" },
     footer: {
-      message: "Local reasoning. Typed tools. Human authority.",
-      copyright: "Homelab Console documentation",
+      copyright: "Homelab Console",
     },
   },
 });

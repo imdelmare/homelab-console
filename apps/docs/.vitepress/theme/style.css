@@ -118,7 +118,7 @@ body {
 .VPSidebarItem.level-0 > .item > .text {
   color: var(--vp-c-text-3);
   font-family: var(--vp-font-family-mono);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -178,7 +178,7 @@ body {
   color: var(--vp-c-brand-1);
   content: "SECTION";
   font-family: var(--vp-font-family-mono);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
 }
@@ -364,7 +364,7 @@ body {
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-alt);
   font-family: var(--vp-font-family-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -378,7 +378,7 @@ body {
 
 .custom-block-title {
   font-family: var(--vp-font-family-mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -412,7 +412,7 @@ body {
   border-top: 1px solid var(--vp-c-divider) !important;
   background: var(--vp-c-bg) !important;
   font-family: var(--vp-font-family-mono);
-  font-size: 9px !important;
+  font-size: 10px !important;
 }
 
 @media (max-width: 960px) {
