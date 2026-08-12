@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: "Homelab Console"
-  text: "Run your homelab with a small local AI"
-  tagline: Private, local reasoning over typed tools, bounded context, operator approvals, and one auditable execution core. No cloud AI required.
+  text: "Make a small local model useful"
+  tagline: Reduce the problem with deterministic summaries, typed tools, bounded context, and human authority. Keep the reasoning local when the workload allows it.
   actions:
     - theme: brand
       text: Start locally
@@ -14,8 +14,8 @@ hero:
       link: /product-tour
 
 features:
-  - title: Local-first reasoning
-    details: Use Ollama or an inventory-bound OpenAI-compatible model on your private LAN. Cloud models are optional.
+  - title: Local 4B, proven on MCP Lite
+    details: Qwen 3.5 4B led all three read-only routes in one controlled benchmark and selected the expected tool in 3/3 tests.
   - title: Built for smaller models
     details: Compact observations, strict schemas, persistent tasks, and authored runbooks reduce the reasoning burden.
   - title: No direct authority
@@ -33,6 +33,17 @@ and validates every decision before execution.
 
 The model remains replaceable. Infrastructure knowledge, credentials, task
 state, approvals, and authority remain in the control plane.
+
+## Evidence, not model hype
+
+In the first MCP Lite run, local Qwen 3.5 4B completed the three read-only routes
+with an 11.9-second mean. DeepSeek V4 Pro averaged 17.3 seconds, Luna Fast 22.9,
+and Sol 29.8. All tested models selected the correct tool in 3/3 tests.
+
+The [full benchmark](./benchmark.md) publishes the prompt conditions, individual
+route times, observed format issue, ranking rationale, and limits of a
+single-execution test. It does not claim that a 4B model is ready for complex
+diagnosis or remediation.
 
 ## From a local question to an audited action
 

@@ -172,7 +172,7 @@ function showConsole(result: AuthCompleteResponse | { user: SessionUser; csrf_to
         "div",
         { className: "console-shell" },
         element("aside", { className: "sidebar" },
-          element("a", { className: "wordmark", href: "#inbox", "aria-label": "Homelab Console inbox" }, element("span", {}, "Homelab", element("small", {}, "private operations"))),
+          element("a", { className: "wordmark", href: "#inbox", "aria-label": "Homelab Console inbox" }, element("span", {}, "Homelab Console")),
           nav,
           element("div", { className: "sidebar-footer" },
             element("span", { className: "user-label" }, "Signed in as", element("strong", {}, result.user.username)),
@@ -205,7 +205,7 @@ function showConsole(result: AuthCompleteResponse | { user: SessionUser; csrf_to
 
 setUnauthorizedHandler(() => showLogin(true));
 
-replaceChildren(root, element("div", { className: "boot-screen" }, element("p", {}, "Opening private operations…")));
+replaceChildren(root, element("div", { className: "boot-screen" }, element("p", {}, "Opening…")));
 
 withTimeout(fetchSession(), 8_000, "Session check timed out")
   .then((session) => {

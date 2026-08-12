@@ -48,16 +48,17 @@ Open Inbox
 ## Choose the shortest path
 
 1. Start with the [Product Tour](./product-tour.md) and the operator workflow.
-2. Read [Conversation Service](./conversation.md) for the current Ollama and
-   private OpenAI-compatible model contracts and their bounded tool scope.
+2. Read [Local Models](./local-models.md) to choose the smallest useful runtime,
+   then review the [MCP Lite benchmark](./benchmark.md).
 3. Connect one integration using the normalized backend contracts documented in
    [Providers](./providers.md), then inspect it in the Systems section.
 4. Review how exact writes stop at the human boundary in
    [Security](./security.md).
 5. Use the [MCP adapter](./mcp.md) only when you want an external compatible
    agent to share the same governed tool surface.
-6. Continue with [Architecture](./architecture.md) when you need the complete
-   five-plane model and execution internals.
+6. Continue with [Architecture](./architecture.md) and the
+   [Conversation Service reference](./conversation.md) when you need execution
+   internals, schemas, fallbacks, and limits.
 
 ## Local validation
 

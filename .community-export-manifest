@@ -279,10 +279,12 @@ apps/docs/.vitepress/theme/index.ts
 apps/docs/.vitepress/theme/style.css
 apps/docs/content/architecture.md
 apps/docs/content/authentication.md
+apps/docs/content/benchmark.md
 apps/docs/content/conversation.md
 apps/docs/content/fixer-dispatch-contract-v1.md
 apps/docs/content/getting-started.md
 apps/docs/content/index.md
+apps/docs/content/local-models.md
 apps/docs/content/mcp.md
 apps/docs/content/metrics.md
 apps/docs/content/notifications.md
@@ -349,6 +351,7 @@ deploy/compose/env.example
 deploy/nginx.conf
 docs/architecture.md
 docs/authentication.md
+docs/benchmark.md
 docs/conversation.md
 docs/decisions/0004-first-live-write-capabilities.md
 docs/decisions/0006-activate-proxmox-lxc-drill.md
@@ -357,6 +360,7 @@ docs/decisions/0010-activate-opnsense-gateway-drill.md
 docs/fixer-dispatch-contract-v1.md
 docs/getting-started.md
 docs/index.md
+docs/local-models.md
 docs/mcp.md
 docs/metrics.md
 docs/notifications.md
